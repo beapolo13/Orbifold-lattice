@@ -37,7 +37,7 @@ def ladder(type,mode,cutoff):     #type=True for destroy(a), =False for create (
 
 
 #variables will be defined by a type=('x' or 'p'), and a mode label (string)
-def map(type,label,cutoff):
+def map(type,label):
   labels={'alpha_1':1,'alpha_2':2,'beta_1':3,'beta_2':4,'gamma_1':5,'gamma_2':6,'delta_1':7,'delta_2':8}
   inverse_labels = {value: key for key, value in labels.items()}  #this will be useful for the definition of H_el and delta_H
   if type=='x':
@@ -47,27 +47,26 @@ def map(type,label,cutoff):
   
 #construct hamiltonian
 
-def H_plaquette(g_1d,a,mu,cutoff):
+def H_plaquette(g_1d,a,mu):
   labels={'alpha_1':1,'alpha_2':2,'beta_1':3,'beta_2':4,'gamma_1':5,'gamma_2':6,'delta_1':7,'delta_2':8}
   inverse_labels = {value: key for key, value in labels.items()}  #this will be useful for the definition of H_el and delta_H
   H_kin=0
   for label in labels:
-    H_kin+=(1/2)*(map('p',label,cutoff)**2)
-
+    H_kin+=(1/2)*(map('p',label)**2)
   #print(H_kin)
 
   H_b=0
-  H_b+= (map('x','beta_1',cutoff)*map('x','alpha_1',cutoff)-map('x','beta_2',cutoff)*map('x','alpha_2',cutoff)+map('x','gamma_1',cutoff)*map('x','delta_1',cutoff)-map('x','gamma_2',cutoff)+map('x','delta_2',cutoff))**2     #first term
-  H_b+= (map('x','beta_1',cutoff)*map('x','alpha_2',cutoff)+map('x','beta_2',cutoff)*map('x','alpha_1',cutoff)+map('x','gamma_1',cutoff)*map('x','delta_2',cutoff)+map('x','gamma_2',cutoff)+map('x','delta_1',cutoff))**2    #second term
+  H_b+= (map('x','beta_1')*map('x','alpha_1')-map('x','beta_2')*map('x','alpha_2')+map('x','gamma_1')*map('x','delta_1')-map('x','gamma_2')+map('x','delta_2'))**2     #first term
+  H_b+= (map('x','beta_1')*map('x','alpha_2')+map('x','beta_2')*map('x','alpha_1')+map('x','gamma_1')*map('x','delta_2')+map('x','gamma_2')+map('x','delta_1'))**2    #second term
   H_b*=(g_1d**2)
 
   H_el=0
   for m in range(1,5):
-    H_el+= (map('x',inverse_labels[2*m-1],cutoff)**2 + map('x',inverse_labels[2*m],cutoff)**2)**2  #first term
-  H_el+=(map('x',inverse_labels[1],cutoff)**2 + map('x',inverse_labels[2],cutoff)**2)*(map('x',inverse_labels[7],cutoff)**2 + map('x',inverse_labels[8],cutoff)**2)
-  H_el-=(map('x',inverse_labels[1],cutoff)**2 + map('x',inverse_labels[2],cutoff)**2)*(map('x',inverse_labels[3],cutoff)**2 + map('x',inverse_labels[4],cutoff)**2)
-  H_el-=(map('x',inverse_labels[5],cutoff)**2 + map('x',inverse_labels[6],cutoff)**2)*(map('x',inverse_labels[7],cutoff)**2 + map('x',inverse_labels[8],cutoff)**2)
-  H_el+=(map('x',inverse_labels[5],cutoff)**2 + map('x',inverse_labels[6],cutoff)**2)*(map('x',inverse_labels[3],cutoff)**2 + map('x',inverse_labels[4],cutoff)**2)
+    H_el+= (map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)**2  #first term
+  H_el+=(map('x',inverse_labels[1])**2 + map('x',inverse_labels[2])**2)*(map('x',inverse_labels[7])**2 + map('x',inverse_labels[8])**2)
+  H_el-=(map('x',inverse_labels[1])**2 + map('x',inverse_labels[2])**2)*(map('x',inverse_labels[3])**2 + map('x',inverse_labels[4])**2)
+  H_el-=(map('x',inverse_labels[5])**2 + map('x',inverse_labels[6])**2)*(map('x',inverse_labels[7])**2 + map('x',inverse_labels[8])**2)
+  H_el+=(map('x',inverse_labels[5])**2 + map('x',inverse_labels[6])**2)*(map('x',inverse_labels[3])**2 + map('x',inverse_labels[4])**2)
   H_el*=g_1d**2/(4*a)
 
 
@@ -75,8 +74,8 @@ def H_plaquette(g_1d,a,mu,cutoff):
   #C=(mu*a*g_1d)**2/8
   #D= 2/(a*(g_1d**2))
   for m in range(1,5):
-    delta_H+= ((mu*a*g_1d)**2/8)*(map('x',inverse_labels[2*m-1],cutoff)**2 + map('x',inverse_labels[2*m],cutoff)**2)**2
-    delta_H-=(mu**2*a/4)* (map('x',inverse_labels[2*m-1],cutoff)**2 + map('x',inverse_labels[2*m],cutoff)**2)
+    delta_H+= ((mu*a*g_1d)**2/8)*(map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)**2
+    delta_H-=(mu**2*a/4)* (map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)
     #delta_H += (mu*a*g_1d)**2 / (2*a*(2*a*g_1d**2)**2) #this are the corrections, but they depend on g_1d inversely-quadratic
   #print(delta_H)
 
@@ -92,11 +91,11 @@ def Hfree(a,mu,cutoff):
     inverse_labels = {value: key for key, value in labels.items()}  #this will be useful for the definition of H_el and delta_H
     H_kin=0
     for label in labels:
-        H_kin+=(1/2)*(map('p',label,cutoff)**2)
+        H_kin+=(1/2)*(map('p',label)**2)
 
     decoupledH=0
     for m in range(1,5):
-        decoupledH-=(mu**2*a/4)* (map('x',inverse_labels[2*m-1],cutoff)**2 + map('x',inverse_labels[2*m],cutoff)**2)
+        decoupledH-=(mu**2*a/4)* (map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)
 
     return H_kin + decoupledH
 
@@ -180,11 +179,11 @@ def V_with_hc(g_1d,a,mu):
 
 #we define a function that diagonalizes exactly any input hamiltonian (can be used for any operator), maybe dependent on some parameter
 #the ground state vector and the vector of ground state energies are returned as output
-def exact_diagonalization(hamiltonian,parameter,cutoff,parameter1=None,parameter2=None):
+def exact_diagonalization(hamiltonian,parameter,parameter1=None,parameter2=None):
     gs_vectors=[]
     gs_energies=[]
     for i in range(len(parameter)):
-        H= hamiltonian(parameter[i],parameter1,parameter2,cutoff)
+        H= hamiltonian(parameter[i],parameter1,parameter2)
         energy, vector = qutip.Qobj.groundstate(H)
         gs_vectors+=[vector]
         gs_energies+=[energy]
@@ -196,18 +195,18 @@ def exact_diagonalization(hamiltonian,parameter,cutoff,parameter1=None,parameter
     # A possible sanity check is to see that H with corrections is positive semidefinite (its lowest eigenvalue is greater than 0)
     return gs
 
-def plaquette_operator(g,a,N,cut=cutoff): #N is the number of plaquettes, one in our case
+def plaquette_operator(g,a,N): #N is the number of plaquettes, one in our case
     def P_operator():
-        x_alpha_dag=(1/np.sqrt(2))*(map('x','alpha_1',cut)- 1j*map('x','alpha_2',cut))
-        x_beta_dag=(1/np.sqrt(2))*(map('x','beta_1',cut)- 1j*map('x','beta_2',cut))
-        x_delta=(1/np.sqrt(2))*(map('x','delta_1',cut)+ 1j*map('x','delta_2',cut))
-        x_gamma=(1/np.sqrt(2))*(map('x','gamma_1',cut)+ 1j*map('x','gamma_2',cut))
+        x_alpha_dag=(1/np.sqrt(2))*(map('x','alpha_1')- 1j*map('x','alpha_2'))
+        x_beta_dag=(1/np.sqrt(2))*(map('x','beta_1')- 1j*map('x','beta_2'))
+        x_delta=(1/np.sqrt(2))*(map('x','delta_1')+ 1j*map('x','delta_2'))
+        x_gamma=(1/np.sqrt(2))*(map('x','gamma_1')+ 1j*map('x','gamma_2'))
         return x_alpha_dag*x_beta_dag*x_delta*x_gamma
     def P_dag_operator():
-        x_alpha=(1/np.sqrt(2))*(map('x','alpha_1',cut)+ 1j*map('x','alpha_2',cut))
-        x_beta=(1/np.sqrt(2))*(map('x','beta_1',cut)+ 1j*map('x','beta_2',cut))
-        x_delta_dag=(1/np.sqrt(2))*(map('x','delta_1',cut)- 1j*map('x','delta_2',cut))
-        x_gamma_dag=(1/np.sqrt(2))*(map('x','gamma_1',cut)- 1j*map('x','gamma_2',cut))
+        x_alpha=(1/np.sqrt(2))*(map('x','alpha_1')+ 1j*map('x','alpha_2'))
+        x_beta=(1/np.sqrt(2))*(map('x','beta_1')+ 1j*map('x','beta_2'))
+        x_delta_dag=(1/np.sqrt(2))*(map('x','delta_1')- 1j*map('x','delta_2'))
+        x_gamma_dag=(1/np.sqrt(2))*(map('x','gamma_1')- 1j*map('x','gamma_2'))
         return x_gamma_dag*x_delta_dag*x_beta*x_alpha
     return (1/(2*N)) *(P_operator()+P_dag_operator())
 

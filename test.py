@@ -18,9 +18,9 @@ inverse_labels = {value: key for key, value in labels.items()}  #this will be us
 #parameters
 a=1
 mu=1
-g_vec=np.arange(0.3,10,1) #free parameter
+g_vec=np.arange(1,10,0.1) #free parameter
 #sometimes we need to compute quantities and plots with respect to 1/g^2, so we compute this vector too: 
 
 
 #expectation_value_on_gs(plaquette_operator,H_plaquette, g_vec,3,parameter1=1,parameter2=1)
-exact_diagonalization(H_plaquette,g_vec,cutoff=cutoff,parameter1=1,parameter2=1)
+exact_diagonalization(H_plaquette_with_hc,g_vec,parameter1=1,parameter2=1)
