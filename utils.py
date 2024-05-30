@@ -53,12 +53,13 @@ def H_plaquette(g_1d,a,mu):
   H_kin=0
   for label in labels:
     H_kin+=(1/2)*(map('p',label)**2)
-  #print(H_kin)
+  print('H_kin', H_kin)
 
   H_b=0
-  H_b+= (map('x','beta_1')*map('x','alpha_1')-map('x','beta_2')*map('x','alpha_2')+map('x','gamma_1')*map('x','delta_1')-map('x','gamma_2')+map('x','delta_2'))**2     #first term
-  H_b+= (map('x','beta_1')*map('x','alpha_2')+map('x','beta_2')*map('x','alpha_1')+map('x','gamma_1')*map('x','delta_2')+map('x','gamma_2')+map('x','delta_1'))**2    #second term
+  H_b+= (map('x','beta_1')*map('x','alpha_1')-map('x','beta_2')*map('x','alpha_2')+map('x','gamma_1')*map('x','delta_1')-map('x','gamma_2')*map('x','delta_2'))**2     #first term
+  H_b+= (map('x','beta_1')*map('x','alpha_2')+map('x','beta_2')*map('x','alpha_1')+map('x','gamma_1')*map('x','delta_2')+map('x','gamma_2')*map('x','delta_1'))**2    #second term
   H_b*=(g_1d**2)
+  print('H_b',H_b)
 
   H_el=0
   for m in range(1,5):
@@ -68,7 +69,7 @@ def H_plaquette(g_1d,a,mu):
   H_el-=(map('x',inverse_labels[5])**2 + map('x',inverse_labels[6])**2)*(map('x',inverse_labels[7])**2 + map('x',inverse_labels[8])**2)
   H_el+=(map('x',inverse_labels[5])**2 + map('x',inverse_labels[6])**2)*(map('x',inverse_labels[3])**2 + map('x',inverse_labels[4])**2)
   H_el*=g_1d**2/(4*a)
-
+  print('H_el',H_el)
 
   delta_H=0
   #C=(mu*a*g_1d)**2/8
@@ -76,15 +77,16 @@ def H_plaquette(g_1d,a,mu):
   for m in range(1,5):
     delta_H+= ((mu*a*g_1d)**2/8)*(map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)**2
     delta_H-=(mu**2*a/4)* (map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)
-    #delta_H += (mu*a*g_1d)**2 / (2*a*(2*a*g_1d**2)**2) #this are the corrections, but they depend on g_1d inversely-quadratic
-  #print(delta_H)
+    delta_H += (mu*a*g_1d)**2 / (2*(2*a*g_1d**2)**2) #this are the corrections, but they depend on g_1d inversely-quadratic
+  print('delta H', delta_H)
 
   return H_kin + H_b + H_el + delta_H
 
-def H_plaquette_with_hc(g_1d,a,mu):
-    labels={'alpha_1':1,'alpha_2':2,'beta_1':3,'beta_2':4,'gamma_1':5,'gamma_2':6,'delta_1':7,'delta_2':8}
-    inverse_labels = {value: key for key, value in labels.items()}  #this will be useful for the definition of H_el and delta_H
-    return H_plaquette(g_1d,a,mu) + 4*(mu*a*g_1d)**2 / (2*a*(2*a*g_1d**2)**2) 
+#i have commented this whole function because i have added the corrections to the hamiltonian above in delta_H
+# def H_plaquette_with_corrections(g_1d,a,mu):
+#     labels={'alpha_1':1,'alpha_2':2,'beta_1':3,'beta_2':4,'gamma_1':5,'gamma_2':6,'delta_1':7,'delta_2':8}
+#     inverse_labels = {value: key for key, value in labels.items()}  #this will be useful for the definition of H_el and delta_H
+#     return H_plaquette(g_1d,a,mu) + 4*(mu*a*g_1d)**2 / (2*a*(2*a*g_1d**2)**2) 
 
 def Hfree(a,mu,cutoff):
     labels={'alpha_1':1,'alpha_2':2,'beta_1':3,'beta_2':4,'gamma_1':5,'gamma_2':6,'delta_1':7,'delta_2':8}
