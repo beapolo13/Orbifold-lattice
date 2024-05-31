@@ -1,6 +1,4 @@
 from utils import *
-
-
 import numpy as np
 import sympy as sp
 from sympy import simplify, expand, factor
@@ -88,7 +86,7 @@ def plaquette_operator_sym(g,a,N): #N is the number of plaquettes, one in our ca
     return (1/(2*N)) *(P_operator()+P_dag_operator())
 
 g_1d, a, mu = sp.symbols('g_1d a mu')
-print(to_latex(factor(expand((plaquette_operator_sym(g_1d, a, 1))/0.0625))))
+print(to_latex(expand(simplify(plaquette_operator_sym(g_1d, a, 1)))))
 
 
 # Example usage

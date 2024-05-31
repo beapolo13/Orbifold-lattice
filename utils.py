@@ -1,8 +1,8 @@
 #pip install qutip
-
 import numpy as np
 from numpy import transpose, real, sqrt, sin, cos, linalg, cosh, sinh
 import scipy
+from scipy.sparse import lil_matrix, csc_matrix
 import matplotlib.pyplot as plt
 from itertools import combinations
 from scipy.optimize import minimize
@@ -18,12 +18,20 @@ from qutip import tensor, destroy, create, identity
 from qutip import *
 #from qutip.tensor import tensor
 import os
+import winsound
+
+
 
 n_modes=8
 cutoff=3
 
 def beep():
     os.system("afplay /System/Library/Sounds/Ping.aiff")
+    freq=800
+    dur=500
+    winsound.Beep(freq,dur)
+  
+
 
 #definition of ladder operator generation function(create/destroy on mode i)
 def ladder(type,mode,cutoff):     #type=True for destroy(a), =False for create (adag)  #cutoff is the maximum dimension of Fock space for ladder operators
@@ -53,13 +61,13 @@ def H_plaquette(g_1d,a,mu):
   H_kin=0
   for label in labels:
     H_kin+=(1/2)*(map('p',label)**2)
-  print('H_kin', H_kin)
+  #print('H_kin', H_kin)
 
   H_b=0
   H_b+= (map('x','beta_1')*map('x','alpha_1')-map('x','beta_2')*map('x','alpha_2')+map('x','gamma_1')*map('x','delta_1')-map('x','gamma_2')*map('x','delta_2'))**2     #first term
   H_b+= (map('x','beta_1')*map('x','alpha_2')+map('x','beta_2')*map('x','alpha_1')+map('x','gamma_1')*map('x','delta_2')+map('x','gamma_2')*map('x','delta_1'))**2    #second term
   H_b*=(g_1d**2)
-  print('H_b',H_b)
+  #print('H_b',H_b)
 
   H_el=0
   for m in range(1,5):
@@ -69,7 +77,7 @@ def H_plaquette(g_1d,a,mu):
   H_el-=(map('x',inverse_labels[5])**2 + map('x',inverse_labels[6])**2)*(map('x',inverse_labels[7])**2 + map('x',inverse_labels[8])**2)
   H_el+=(map('x',inverse_labels[5])**2 + map('x',inverse_labels[6])**2)*(map('x',inverse_labels[3])**2 + map('x',inverse_labels[4])**2)
   H_el*=g_1d**2/(4*a)
-  print('H_el',H_el)
+  #print('H_el',H_el)
 
   delta_H=0
   #C=(mu*a*g_1d)**2/8
@@ -77,8 +85,8 @@ def H_plaquette(g_1d,a,mu):
   for m in range(1,5):
     delta_H+= ((mu*a*g_1d)**2/8)*(map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)**2
     delta_H-=(mu**2*a/4)* (map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)
-    delta_H += (mu*a*g_1d)**2 / (2*(2*a*g_1d**2)**2) #this are the corrections, but they depend on g_1d inversely-quadratic
-  print('delta H', delta_H)
+    #delta_H += (mu*a*g_1d)**2 / (2*(2*a*g_1d**2)**2) #this are the corrections, but they depend on g_1d inversely-quadratic
+  #print('delta H', delta_H)
 
   return H_kin + H_b + H_el + delta_H
 
@@ -189,6 +197,7 @@ def exact_diagonalization(hamiltonian,parameter,parameter1=None,parameter2=None)
         energy, vector = qutip.Qobj.groundstate(H)
         gs_vectors+=[vector]
         gs_energies+=[energy]
+        print('g value', parameter[i])
     gs=[gs_vectors, gs_energies]
     beep()
     plt.plot(parameter,gs_energies,'r--', label='Energy of groundstate of H')
