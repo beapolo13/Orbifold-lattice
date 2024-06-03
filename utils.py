@@ -19,6 +19,7 @@ from qutip import *
 #from qutip.tensor import tensor
 import os
 import winsound
+import pickle
 
 
 
@@ -85,10 +86,52 @@ def H_plaquette(g_1d,a,mu):
   for m in range(1,5):
     delta_H+= ((mu*a*g_1d)**2/8)*(map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)**2
     delta_H-=(mu**2*a/4)* (map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)
-    #delta_H += (mu*a*g_1d)**2 / (2*(2*a*g_1d**2)**2) #this are the corrections, but they depend on g_1d inversely-quadratic
+    delta_H += (mu*a*g_1d)**2 / (2*(2*a*g_1d**2)**2) #this are the corrections, but they depend on g_1d inversely-quadratic
   #print('delta H', delta_H)
 
   return H_kin + H_b + H_el + delta_H
+
+def H_kin(g_1d,a,mu):
+  labels={'alpha_1':1,'alpha_2':2,'beta_1':3,'beta_2':4,'gamma_1':5,'gamma_2':6,'delta_1':7,'delta_2':8}
+  inverse_labels = {value: key for key, value in labels.items()}  #this will be useful for the definition of H_el and delta_H
+  H_kin=0
+  for label in labels:
+    H_kin+=(1/2)*(map('p',label)**2)
+  return H_kin
+
+def H_el(g_1d,a,mu):
+  labels={'alpha_1':1,'alpha_2':2,'beta_1':3,'beta_2':4,'gamma_1':5,'gamma_2':6,'delta_1':7,'delta_2':8}
+  inverse_labels = {value: key for key, value in labels.items()}  #this will be useful for the definition of H_el and delta_H
+  H_el=0
+  for m in range(1,5):
+    H_el+= (map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)**2  #first term
+  H_el+=(map('x',inverse_labels[1])**2 + map('x',inverse_labels[2])**2)*(map('x',inverse_labels[7])**2 + map('x',inverse_labels[8])**2)
+  H_el-=(map('x',inverse_labels[1])**2 + map('x',inverse_labels[2])**2)*(map('x',inverse_labels[3])**2 + map('x',inverse_labels[4])**2)
+  H_el-=(map('x',inverse_labels[5])**2 + map('x',inverse_labels[6])**2)*(map('x',inverse_labels[7])**2 + map('x',inverse_labels[8])**2)
+  H_el+=(map('x',inverse_labels[5])**2 + map('x',inverse_labels[6])**2)*(map('x',inverse_labels[3])**2 + map('x',inverse_labels[4])**2)
+  H_el*=g_1d**2/(4*a)
+  return H_el
+
+def H_b(g_1d,a,mu):
+  labels={'alpha_1':1,'alpha_2':2,'beta_1':3,'beta_2':4,'gamma_1':5,'gamma_2':6,'delta_1':7,'delta_2':8}
+  inverse_labels = {value: key for key, value in labels.items()}  #this will be useful for the definition of H_el and delta_H
+  H_b=0
+  H_b+= (map('x','beta_1')*map('x','alpha_1')-map('x','beta_2')*map('x','alpha_2')+map('x','gamma_1')*map('x','delta_1')-map('x','gamma_2')*map('x','delta_2'))**2     #first term
+  H_b+= (map('x','beta_1')*map('x','alpha_2')+map('x','beta_2')*map('x','alpha_1')+map('x','gamma_1')*map('x','delta_2')+map('x','gamma_2')*map('x','delta_1'))**2    #second term
+  H_b*=(g_1d**2)
+  return H_b
+
+def deltaH(g_1d,a,mu):
+  labels={'alpha_1':1,'alpha_2':2,'beta_1':3,'beta_2':4,'gamma_1':5,'gamma_2':6,'delta_1':7,'delta_2':8}
+  inverse_labels = {value: key for key, value in labels.items()}  #this will be useful for the definition of H_el and delta_H
+  delta_H=0
+  #C=(mu*a*g_1d)**2/8
+  #D= 2/(a*(g_1d**2))
+  for m in range(1,5):
+    delta_H+= ((mu*a*g_1d)**2/8)*(map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)**2
+    delta_H-=(mu**2*a/4)* (map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)
+    delta_H += (mu*a*g_1d)**2 / (2*(2*a*g_1d**2)**2) #this are the corrections, but they depend on g_1d inversely-quadratic
+  return delta_H
 
 #i have commented this whole function because i have added the corrections to the hamiltonian above in delta_H
 # def H_plaquette_with_corrections(g_1d,a,mu):
@@ -175,7 +218,7 @@ def V(g_1d,a,mu): #potential term
   for m in range(1,5):
     delta_H+= ((mu*a*g_1d)**2/8)*(map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)**2
     delta_H-=(mu**2*a/4)* (map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)
-    #delta_H += (mu*a*g_1d)**2 / (2*a*(2*a*g_1d**2)**2)  #this are the corrections, but they depend on g_1d inversely-quadratic
+    delta_H += (mu*a*g_1d)**2 / (2*a*(2*a*g_1d**2)**2)  #this are the corrections, but they depend on g_1d inversely-quadratic
   return H_b + H_el + delta_H
 
 def V_with_hc(g_1d,a,mu):
@@ -189,18 +232,27 @@ def V_with_hc(g_1d,a,mu):
 
 #we define a function that diagonalizes exactly any input hamiltonian (can be used for any operator), maybe dependent on some parameter
 #the ground state vector and the vector of ground state energies are returned as output
-def exact_diagonalization(hamiltonian,parameter,parameter1=None,parameter2=None):
+def exact_diagonalization_and_save(filename,hamiltonian,parameter,parameter1=None,parameter2=None):
     gs_vectors=[]
     gs_energies=[]
+    times_vector=[]
     for i in range(len(parameter)):
+        time0=time.time()
         H= hamiltonian(parameter[i],parameter1,parameter2)
         energy, vector = qutip.Qobj.groundstate(H)
+        timef=time.time()
+        time=timef-time0
         gs_vectors+=[vector]
         gs_energies+=[energy]
+        times_vector+=[time]
         print('g value', parameter[i])
-    gs=[gs_vectors, gs_energies]
+        print('H_kin:', qutip.expect(H_kin(parameter[i],parameter1,parameter2),vector),'H_el:', qutip.expect(H_el(parameter[i],parameter1,parameter2),vector),'H_b:', qutip.expect(H_b(parameter[i],parameter1,parameter2),vector),'deltaH:', qutip.expect(deltaH(parameter[i],parameter1,parameter2),vector))
+    gs=['parameters:',[parameter, parameter1,parameter2],times_vector,gs_vectors, gs_energies]
+    with open(filename, 'wb') as file:
+        pickle.dump(gs, file)
     beep()
     plt.plot(parameter,gs_energies,'r--', label='Energy of groundstate of H')
+    plt.plot(parameter,times_vector,'b--', label='Time to diagonalize H')
     plt.title('Hamiltonian diagonalization')
     plt.show()
     # A possible sanity check is to see that H with corrections is positive semidefinite (its lowest eigenvalue is greater than 0)
@@ -221,20 +273,18 @@ def plaquette_operator(g,a,N): #N is the number of plaquettes, one in our case
         return x_gamma_dag*x_delta_dag*x_beta*x_alpha
     return (1/(2*N)) *(P_operator()+P_dag_operator())
 
-def expectation_value_on_gs(observable, hamiltonian, parameter,cutoff, parameter1=None,parameter2=None): 
+def expectation_value_on_gs(filename,observable, hamiltonian, states, parameter, parameter1=None,parameter2=None): 
     #here we calculate the expectation value of some arbitrary input observable, on the groundstate of out input hamiltonian
     operator=[]
     y_vec=[]
-    x_vec=[]
-    for value in parameter:
-        x_vec+=[1/value**2]
-    states=exact_diagonalization(hamiltonian, parameter,cutoff,parameter1,parameter2)[0]
     for i in range(len(parameter)):
        operator+=[observable(parameter[i],parameter1,parameter2)]
-       y_vec+=[[qutip.expect(operator,states[i])]]
-    plt.plot(x_vec, y_vec, 'r--')
+       y_vec+=[qutip.expect(operator[i],states[i])]
+    plt.plot(parameter, y_vec, 'r--')
+    plt.xscale('log')
     plt.title('Expectation value of operator on groundstate of H')
     beep()
+    plt.savefig(filename)
     plt.show()
     return
 
@@ -279,6 +329,6 @@ def gauss_law_operator(site,cut=cutoff):
         return -x_gamma*p_gamma_dag + p_gamma*x_gamma_dag -x_delta_dag*p_delta +p_delta_dag*x_delta
     if site == '11':
         return -x_gamma_dag*p_gamma + p_gamma_dag*x_gamma -x_beta_dag*p_beta +p_beta_dag*x_beta
-       
+
    
-   
+

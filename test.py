@@ -18,9 +18,24 @@ inverse_labels = {value: key for key, value in labels.items()}  #this will be us
 #parameters
 a=1
 mu=1
-g_vec=np.arange(0.1,5,0.4) #free parameter
-#sometimes we need to compute quantities and plots with respect to 1/g^2, so we compute this vector too: 
+g_vec=np.arange(0.1,10,0.1) #free parameter
+ 
 
 
-#expectation_value_on_gs(plaquette_operator,H_plaquette, g_vec,3,parameter1=1,parameter2=1)
-exact_diagonalization(H_plaquette,1/g_vec**2,parameter1=1,parameter2=1)
+#exact_diagonalization_and_save('diagonalisation.pkl',H_plaquette,1/g_vec**2,a,mu)
+
+#once diagonalisation has been performed, we extract the energy and eigenvectors arrays:
+with open('diagonalisation.pkl', 'rb') as file:
+     result = pickle.load(file)
+     result_energies=result[-1]
+     result_vectors=result[-2]
+
+plt.plot(1/g_vec**2,result_energies,'r--', label='Energy of groundstate of H')
+plt.xscale('log')
+plt.title('Hamiltonian diagonalization')
+plt.savefig('hamiltonian diagonalisation')
+plt.show()
+
+
+expectation_value_on_gs('plaquette',plaquette_operator, H_plaquette, result_vectors, 1/g_vec**2, parameter1=1,parameter2=1)
+expectation_value_on_gs('magnetic field',H_b, H_plaquette, result_vectors, 1/g_vec**2, parameter1=1,parameter2=1)
