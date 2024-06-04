@@ -16,26 +16,32 @@ labels={'alpha_1':1,'alpha_2':2,'beta_1':3,'beta_2':4,'gamma_1':5,'gamma_2':6,'d
 inverse_labels = {value: key for key, value in labels.items()}  #this will be useful for the definition of H_el and delta_H
 
 #parameters
-a=1
+a=1  #a=1 by default, a=0.0001 for the continuum limit
+if a==1:
+     filename='diagonalisation.pkl'
+if a==0.0001:
+     filename= 'diagonalisation_continuum.pkl'
 mu=1
+N=1
 g_vec=np.arange(0.1,10,0.1) #free parameter
  
 
+#check if the stored files have the parameters that we want:
 
-#exact_diagonalization_and_save('diagonalisation.pkl',H_plaquette,1/g_vec**2,a,mu)
-
-#once diagonalisation has been performed, we extract the energy and eigenvectors arrays:
-with open('diagonalisation.pkl', 'rb') as file:
+with open(filename, 'rb') as file:
      result = pickle.load(file)
-     result_energies=result[-1]
-     result_vectors=result[-2]
+     print(result[0])
+     print(result[1])
+     print(result[-1])
 
-plt.plot(1/g_vec**2,result_energies,'r--', label='Energy of groundstate of H')
-plt.xscale('log')
-plt.title('Hamiltonian diagonalization')
-plt.savefig('hamiltonian diagonalisation')
-plt.show()
+#RUN ALL THE FOLLOWING 5 FUNCTIONS (BOTH FOR a=1 and for a=0)
+
+#exact_diagonalization_and_save(filename,f'diagonalisation a={int(a)}',H_plaquette,1/g_vec**2,a,mu)
+
+#expectation_value_on_gs(['gauss law (0,0)','gauss law (1,0)','gauss law (0,1)','gauss law (1,1)'],[gauss_law_operator], H_plaquette, result_vectors, 1/g_vec**2)
+#expectation_value_on_gs(['-H_b','plaquette'],[minus_H_b,plaquette_operator], H_plaquette, result_vectors, 1/g_vec**2,a,mu)
+
+#plot_energy_gap(H_plaquette,1/g_vec**2,a,mu)
 
 
-expectation_value_on_gs('plaquette',plaquette_operator, H_plaquette, result_vectors, 1/g_vec**2, parameter1=1,parameter2=1)
-expectation_value_on_gs('magnetic field',H_b, H_plaquette, result_vectors, 1/g_vec**2, parameter1=1,parameter2=1)
+regime_comparison(filename, f'diag_el a={int(a)}', f'diag_b a={int(a)}',g_vec,a,mu)

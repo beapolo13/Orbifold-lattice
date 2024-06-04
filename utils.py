@@ -18,7 +18,7 @@ from qutip import tensor, destroy, create, identity
 from qutip import *
 #from qutip.tensor import tensor
 import os
-import winsound
+#import winsound
 import pickle
 
 
@@ -30,7 +30,7 @@ def beep():
     os.system("afplay /System/Library/Sounds/Ping.aiff")
     freq=800
     dur=500
-    winsound.Beep(freq,dur)
+    #winsound.Beep(freq,dur)
   
 
 
@@ -86,7 +86,7 @@ def H_plaquette(g_1d,a,mu):
   for m in range(1,5):
     delta_H+= ((mu*a*g_1d)**2/8)*(map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)**2
     delta_H-=(mu**2*a/4)* (map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)
-    delta_H += (mu*a*g_1d)**2 / (2*(2*a*g_1d**2)**2) #this are the corrections, but they depend on g_1d inversely-quadratic
+    #delta_H += (mu*a*g_1d)**2 / (2*(2*a*g_1d**2)**2) #this are the corrections, but they depend on g_1d inversely-quadratic
   #print('delta H', delta_H)
 
   return H_kin + H_b + H_el + delta_H
@@ -121,6 +121,9 @@ def H_b(g_1d,a,mu):
   H_b*=(g_1d**2)
   return H_b
 
+def minus_H_b(g_1d,a,mu):
+   return -H_b(g_1d,a,mu)
+
 def deltaH(g_1d,a,mu):
   labels={'alpha_1':1,'alpha_2':2,'beta_1':3,'beta_2':4,'gamma_1':5,'gamma_2':6,'delta_1':7,'delta_2':8}
   inverse_labels = {value: key for key, value in labels.items()}  #this will be useful for the definition of H_el and delta_H
@@ -132,12 +135,6 @@ def deltaH(g_1d,a,mu):
     delta_H-=(mu**2*a/4)* (map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)
     delta_H += (mu*a*g_1d)**2 / (2*(2*a*g_1d**2)**2) #this are the corrections, but they depend on g_1d inversely-quadratic
   return delta_H
-
-#i have commented this whole function because i have added the corrections to the hamiltonian above in delta_H
-# def H_plaquette_with_corrections(g_1d,a,mu):
-#     labels={'alpha_1':1,'alpha_2':2,'beta_1':3,'beta_2':4,'gamma_1':5,'gamma_2':6,'delta_1':7,'delta_2':8}
-#     inverse_labels = {value: key for key, value in labels.items()}  #this will be useful for the definition of H_el and delta_H
-#     return H_plaquette(g_1d,a,mu) + 4*(mu*a*g_1d)**2 / (2*a*(2*a*g_1d**2)**2) 
 
 def Hfree(a,mu,cutoff):
     labels={'alpha_1':1,'alpha_2':2,'beta_1':3,'beta_2':4,'gamma_1':5,'gamma_2':6,'delta_1':7,'delta_2':8}
@@ -174,15 +171,10 @@ def Hint(g_1d,a,mu):
     #C=(mu*a*g_1d)**2/8
     #D= 2/(a*(g_1d**2))
     for m in range(1,5):
-        delta_H+= ((mu*a*g_1d)**2/8)*(map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)**2
-    #delta_H += (mu*a*g_1d)**2 / (2*a*(2*a*g_1d**2)**2) #this are the corrections, but they depend on g_1d inversely-quadratic
+      delta_H+= ((mu*a*g_1d)**2/8)*(map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)**2
+      delta_H += (mu*a*g_1d)**2 / (2*a*(2*a*g_1d**2)**2) #this are the corrections, but they depend on g_1d inversely-quadratic
     #print(delta_H)
     return H_b +H_el + delta_H
-
-def Hint_with_hc(g_1d,a,mu):
-    labels={'alpha_1':1,'alpha_2':2,'beta_1':3,'beta_2':4,'gamma_1':5,'gamma_2':6,'delta_1':7,'delta_2':8}
-    inverse_labels = {value: key for key, value in labels.items()}  #this will be useful for the definition of H_el and delta_H
-    return Hint(g_1d,a,mu) + 4*(mu*a*g_1d)**2 / (2*a*(2*a*g_1d**2)**2)
 
 #Split hamiltonian
 
@@ -221,44 +213,73 @@ def V(g_1d,a,mu): #potential term
     delta_H += (mu*a*g_1d)**2 / (2*a*(2*a*g_1d**2)**2)  #this are the corrections, but they depend on g_1d inversely-quadratic
   return H_b + H_el + delta_H
 
-def V_with_hc(g_1d,a,mu):
-    labels={'alpha_1':1,'alpha_2':2,'beta_1':3,'beta_2':4,'gamma_1':5,'gamma_2':6,'delta_1':7,'delta_2':8}
-    inverse_labels = {value: key for key, value in labels.items()}  #this will be useful for the definition of H_el and delta_H
-    return V(g_1d,a,mu) + 4*(mu*a*g_1d)**2 / (2*a*(2*a*g_1d**2)**2)
-
 
 #we diagonalize H total once (exact diagonalization) and store the vector of groundstates for each value of g_1d, so that we can access 
 #the values of this vector anytime in the gs_vector
 
 #we define a function that diagonalizes exactly any input hamiltonian (can be used for any operator), maybe dependent on some parameter
 #the ground state vector and the vector of ground state energies are returned as output
-def exact_diagonalization_and_save(filename,hamiltonian,parameter,parameter1=None,parameter2=None):
+def exact_diagonalization_and_save(filename,savefig_name, hamiltonian,parameter,a=None,mu=None):
+  exists_diag=input('is there a file with diagonalization of H?')
+  if exists_diag=='False':
     gs_vectors=[]
     gs_energies=[]
     times_vector=[]
     for i in range(len(parameter)):
         time0=time.time()
-        H= hamiltonian(parameter[i],parameter1,parameter2)
+        H= hamiltonian(parameter[i],a,mu)
         energy, vector = qutip.Qobj.groundstate(H)
         timef=time.time()
-        time=timef-time0
+        delta_time=timef-time0
         gs_vectors+=[vector]
         gs_energies+=[energy]
-        times_vector+=[time]
+        times_vector+=[delta_time]
         print('g value', parameter[i])
-        print('H_kin:', qutip.expect(H_kin(parameter[i],parameter1,parameter2),vector),'H_el:', qutip.expect(H_el(parameter[i],parameter1,parameter2),vector),'H_b:', qutip.expect(H_b(parameter[i],parameter1,parameter2),vector),'deltaH:', qutip.expect(deltaH(parameter[i],parameter1,parameter2),vector))
-    gs=['parameters:',[parameter, parameter1,parameter2],times_vector,gs_vectors, gs_energies]
+        print('H_kin:', qutip.expect(H_kin(parameter[i],a,mu),vector),'H_el:', qutip.expect(H_el(parameter[i],a,mu),vector),'H_b:', qutip.expect(H_b(parameter[i],a,mu),vector),'deltaH:', qutip.expect(deltaH(parameter[i],a,mu),vector))
+    result=['parameters:',[parameter, a,mu],times_vector,gs_vectors, gs_energies]
+    result_energies=result[-1]
+    result_vectors=result[-2]
+    result_times_vector=result[-3]
     with open(filename, 'wb') as file:
-        pickle.dump(gs, file)
-    beep()
-    plt.plot(parameter,gs_energies,'r--', label='Energy of groundstate of H')
-    plt.plot(parameter,times_vector,'b--', label='Time to diagonalize H')
-    plt.title('Hamiltonian diagonalization')
-    plt.show()
-    # A possible sanity check is to see that H with corrections is positive semidefinite (its lowest eigenvalue is greater than 0)
-    return gs
+        pickle.dump(result, file)
+  elif exists_diag=='True':
+    with open(filename, 'rb') as file:
+      result = pickle.load(file)
+      result_energies=result[-1]
+      result_vectors=result[-2]
+      result_times_vector=result[-3]
 
-def plaquette_operator(g,a,N): #N is the number of plaquettes, one in our case
+  plt.plot(parameter,result_energies,'r--', label=f'Energy of groundstate of H when a={a}')
+  #plt.plot(parameter,result_times_vector,'b--', label='Time to diagonalize H')
+  plt.xscale('log')
+  plt.xlabel('1/g^2')
+  plt.legend(['Energy of g.s', 'Time to diagonalize'])
+  plt.title(f'Hamiltonian diagonalization when a={a}')
+  plt.savefig(savefig_name)
+  plt.show()
+    # A possible sanity check is to see that H with corrections is positive semidefinite (its lowest eigenvalue is greater than 0)
+  return result
+
+def full_diagonalization_and_save(filename,hamiltonian,parameter,a,mu):
+  groundstates=[]
+  first_excited=[]
+  gaps=[]
+  for i in range(len(parameter)):
+    H= hamiltonian(parameter[i],a,mu)
+    energy_gs,energy_exc = qutip.Qobj.eigenenergies(H)[0:2], 
+    groundstates+=[energy_gs]
+    first_excited+=[energy_exc]
+    gaps+=[energy_exc-energy_gs]
+    print('g value', parameter[i], 'gap=',energy_exc-energy_gs)
+  data=['parameters',['g_vec',parameter,'a:',a,'mu:',mu],groundstates,first_excited,gaps]
+  with open(filename, 'wb') as file:
+      pickle.dump(data, file)
+  plt.plot(parameter,gaps,'r--')
+  plt.title(f'Gap between first and ground level, a={a}')
+  plt.show()
+  return data
+
+def plaquette_operator(g,a,N=1): #parameters=[a,N] where N is the number of plaquettes, one in our case
     def P_operator():
         x_alpha_dag=(1/np.sqrt(2))*(map('x','alpha_1')- 1j*map('x','alpha_2'))
         x_beta_dag=(1/np.sqrt(2))*(map('x','beta_1')- 1j*map('x','beta_2'))
@@ -273,20 +294,35 @@ def plaquette_operator(g,a,N): #N is the number of plaquettes, one in our case
         return x_gamma_dag*x_delta_dag*x_beta*x_alpha
     return (1/(2*N)) *(P_operator()+P_dag_operator())
 
-def expectation_value_on_gs(filename,observable, hamiltonian, states, parameter, parameter1=None,parameter2=None): 
-    #here we calculate the expectation value of some arbitrary input observable, on the groundstate of out input hamiltonian
+def expectation_value_on_gs(filename,observable_list, hamiltonian, states, parameter, *args): 
+  exists_diag=input('is there a file with diagonalization of H?')
+  if exists_diag=='False':
+    result= exact_diagonalization_and_save(filename,filename,hamiltonian, parameter, *args)
+    result_energies=result[-1]
+    result_vectors=result[-2]
+    result_times_vector=result[-3]
+  elif exists_diag=='True':
+    with open(filename, 'rb') as file:
+      result = pickle.load(file)
+      result_energies=result[-1]
+      result_vectors=result[-2]
+      result_times_vector=result[-3]
+  #here we calculate the expectation value of some arbitrary input observable, on the groundstate of out input hamiltonian
+  y_vec_list=[[] for _ in range(len(observable_list))]
+  for j in range(len(observable_list)):
     operator=[]
-    y_vec=[]
     for i in range(len(parameter)):
-       operator+=[observable(parameter[i],parameter1,parameter2)]
-       y_vec+=[qutip.expect(operator[i],states[i])]
-    plt.plot(parameter, y_vec, 'r--')
-    plt.xscale('log')
-    plt.title('Expectation value of operator on groundstate of H')
-    beep()
-    plt.savefig(filename)
-    plt.show()
-    return
+      operator+=[observable_list[j](parameter[i],*args)]
+      y_vec_list[j]+=[qutip.expect(operator[i],states[i])]
+    plt.plot(parameter, y_vec_list[j],linestyle='dashed')
+  plt.xscale('log')
+  plt.xlabel('1/g^2')
+  plt.title('Expectation value of operators on groundstate of H')
+  plt.legend([item for item in filename])
+  beep()
+  plt.savefig(str(filename))
+  plt.show()
+  return
 
 #function to tell whether two operators commute or not
 def commutator(operator1,operator2,parameter,parameter1=None,parameter2=None):
@@ -302,33 +338,85 @@ def commutator(operator1,operator2,parameter,parameter1=None,parameter2=None):
     return answer
 
 
-def gauss_law_operator(site,cut=cutoff):
-    x_alpha_dag=(1/np.sqrt(2))*(map('x','alpha_1',cut)- 1j*map('x','alpha_2',cut))
-    x_beta_dag=(1/np.sqrt(2))*(map('x','beta_1',cut)- 1j*map('x','beta_2',cut))
-    x_delta=(1/np.sqrt(2))*(map('x','delta_1',cut)+ 1j*map('x','delta_2',cut))
-    x_gamma=(1/np.sqrt(2))*(map('x','gamma_1',cut)+ 1j*map('x','gamma_2',cut))
-    x_alpha=(1/np.sqrt(2))*(map('x','alpha_1',cut)+ 1j*map('x','alpha_2',cut))
-    x_beta=(1/np.sqrt(2))*(map('x','beta_1',cut)+ 1j*map('x','beta_2',cut))
-    x_delta_dag=(1/np.sqrt(2))*(map('x','delta_1',cut)- 1j*map('x','delta_2',cut))
-    x_gamma_dag=(1/np.sqrt(2))*(map('x','gamma_1',cut)- 1j*map('x','gamma_2',cut))
+def gauss_law_operator(g):
+    x_alpha_dag=(1/np.sqrt(2))*(map('x','alpha_1')- 1j*map('x','alpha_2'))
+    x_beta_dag=(1/np.sqrt(2))*(map('x','beta_1')- 1j*map('x','beta_2'))
+    x_delta=(1/np.sqrt(2))*(map('x','delta_1')+ 1j*map('x','delta_2'))
+    x_gamma=(1/np.sqrt(2))*(map('x','gamma_1')+ 1j*map('x','gamma_2'))
+    x_alpha=(1/np.sqrt(2))*(map('x','alpha_1')+ 1j*map('x','alpha_2'))
+    x_beta=(1/np.sqrt(2))*(map('x','beta_1')+ 1j*map('x','beta_2'))
+    x_delta_dag=(1/np.sqrt(2))*(map('x','delta_1')- 1j*map('x','delta_2'))
+    x_gamma_dag=(1/np.sqrt(2))*(map('x','gamma_1')- 1j*map('x','gamma_2'))
 
-    p_alpha_dag=(1/np.sqrt(2))*(map('p','alpha_1',cut)- 1j*map('p','alpha_2',cut))
-    p_beta_dag=(1/np.sqrt(2))*(map('p','beta_1',cut)- 1j*map('p','beta_2',cut))
-    p_delta=(1/np.sqrt(2))*(map('p','delta_1',cut)+ 1j*map('p','delta_2',cut))
-    p_gamma=(1/np.sqrt(2))*(map('p','gamma_1',cut)+ 1j*map('p','gamma_2',cut))
-    p_alpha=(1/np.sqrt(2))*(map('p','alpha_1',cut)+ 1j*map('p','alpha_2',cut))
-    p_beta=(1/np.sqrt(2))*(map('p','beta_1',cut)+ 1j*map('p','beta_2',cut))
-    p_delta_dag=(1/np.sqrt(2))*(map('p','delta_1',cut)- 1j*map('p','delta_2',cut))
-    p_gamma_dag=(1/np.sqrt(2))*(map('p','gamma_1',cut)- 1j*map('p','gamma_2',cut))
+    p_alpha_dag=(1/np.sqrt(2))*(map('p','alpha_1')- 1j*map('p','alpha_2'))
+    p_beta_dag=(1/np.sqrt(2))*(map('p','beta_1')- 1j*map('p','beta_2'))
+    p_delta=(1/np.sqrt(2))*(map('p','delta_1')+ 1j*map('p','delta_2'))
+    p_gamma=(1/np.sqrt(2))*(map('p','gamma_1')+ 1j*map('p','gamma_2'))
+    p_alpha=(1/np.sqrt(2))*(map('p','alpha_1')+ 1j*map('p','alpha_2'))
+    p_beta=(1/np.sqrt(2))*(map('p','beta_1')+ 1j*map('p','beta_2'))
+    p_delta_dag=(1/np.sqrt(2))*(map('p','delta_1')- 1j*map('p','delta_2'))
+    p_gamma_dag=(1/np.sqrt(2))*(map('p','gamma_1')- 1j*map('p','gamma_2'))
 
-    if site=='00':
-        return -x_alpha*p_alpha_dag + p_alpha*x_alpha_dag -x_delta*p_delta_dag +p_delta*x_delta_dag
-    if site=='10':
-        return -x_alpha_dag*p_alpha + p_alpha_dag*x_alpha -x_beta*p_beta_dag +p_beta*x_beta_dag
-    if site == '01':
-        return -x_gamma*p_gamma_dag + p_gamma*x_gamma_dag -x_delta_dag*p_delta +p_delta_dag*x_delta
-    if site == '11':
-        return -x_gamma_dag*p_gamma + p_gamma_dag*x_gamma -x_beta_dag*p_beta +p_beta_dag*x_beta
+    #returns a list of operators of g for each site, numbered 00, 10,01,11 
+    return [-x_alpha*p_alpha_dag + p_alpha*x_alpha_dag -x_delta*p_delta_dag +p_delta*x_delta_dag, -x_alpha_dag*p_alpha + p_alpha_dag*x_alpha -x_beta*p_beta_dag +p_beta*x_beta_dag, -x_gamma*p_gamma_dag + p_gamma*x_gamma_dag -x_delta_dag*p_delta +p_delta_dag*x_delta, -x_gamma_dag*p_gamma + p_gamma_dag*x_gamma -x_beta_dag*p_beta +p_beta_dag*x_beta]
+    
 
-   
+def plot_energy_gap(filename,hamiltonian,parameter,a,mu):  #if there is no diagonalization then filename=the name how we want to save it
+  exists_diag= input('Is there a FULL diagonalization of H in this regime?')
+  if exists_diag== True:
+    with open(filename, 'rb') as file:
+      result = pickle.load(file)
+      groundstates=result[-3]
+      first_excited=result[-2]
+      gaps=result[-1]
+  if exists_diag== False:
+    full_diagonalization_and_save(filename,hamiltonian,parameter,a,mu)
 
+  plt.plot(parameter,gaps,'r--')
+  plt.title('Gap between first and ground level')
+  plt.savefig('Energy gap')
+  plt.show()
+  return
+
+
+def regime_comparison(filenameH, filename_el, filename_B,parameter,a,mu):
+  #before running this function there must be a file with the diagonalisation results of H_el and H_b (uncomment the two lines above:)
+  exists_diagonalisation=input('Is there a file with H_total diagonalisation in this regime?')
+  if exists_diagonalisation == 'False':
+    exact_diagonalization_and_save(filenameH,filenameH,H_plaquette,1/parameter**2,a,mu)
+
+  exists_el_diagonalisation=input('Is there a file with H_el diagonalisation in this regime?')
+  if exists_el_diagonalisation == 'False':
+    exact_diagonalization_and_save(filename_el,filename_el,H_el,1/parameter**2,a,mu)
+
+  exists_mag_diagonalisation=input('Is there a file with H_b diagonalisation?')
+  if exists_mag_diagonalisation == 'False':
+    exact_diagonalization_and_save(filename_B,filename_el,H_b,1/parameter**2,a,mu)
+  
+  #then we recover the three diagonalisations 
+  #that of the full hamiltonian
+  with open(filenameH, 'rb') as file:
+    result = pickle.load(file)
+    result_energies=result[-1]
+    result_vectors=result[-2]
+  with open(filename_el, 'rb') as file_el:
+    electric = pickle.load(file_el)
+    electric_energies=electric[-1]
+    electric_vectors=electric[-2]
+     
+  with open(filename_B, 'rb') as file_mag:
+    magnetic = pickle.load(file_mag)
+    magnetic_energies=magnetic[-1]
+    magnetic_vectors=magnetic[-2]
+
+  plt.plot(parameter,result_energies,'r--', label='total H')
+  plt.plot(parameter,electric_energies,'b--', label='total H_el')
+  plt.plot(parameter,magnetic_energies,'g--', label='H_b')
+  plt.xscale('log')
+  plt.xlabel('1/g^2')
+  plt.legend(['total H', 'H_el', 'H_b'])
+  plt.title('Regime comparison')
+  plt.savefig('regime comparison')
+  plt.show()
+
+  return 
