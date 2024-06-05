@@ -18,7 +18,7 @@ from qutip import tensor, destroy, create, identity
 from qutip import *
 #from qutip.tensor import tensor
 import os
-import winsound
+#import winsound
 import pickle
 
 
@@ -30,7 +30,7 @@ def beep():
     os.system("afplay /System/Library/Sounds/Ping.aiff")
     freq=800
     dur=500
-    winsound.Beep(freq,dur)
+    #winsound.Beep(freq,dur)
   
 
 
@@ -296,7 +296,7 @@ def plaquette_operator(g,a,N=1): #parameters=[a,N] where N is the number of plaq
         return x_gamma_dag*x_delta_dag*x_beta*x_alpha
     return (1/(2*N)) *(P_operator()+P_dag_operator())
 
-def expectation_value_on_gs(filename,observable_list, hamiltonian, states, parameter, *args): 
+def expectation_value_on_gs(filename,savefig_name,observable_list, hamiltonian, parameter, *args): 
   exists_diag=input('is there a file with diagonalization of H?')
   if exists_diag=='False':
     result= exact_diagonalization_and_save(filename,filename,hamiltonian, parameter, *args)
@@ -309,6 +309,7 @@ def expectation_value_on_gs(filename,observable_list, hamiltonian, states, param
       result_energies=result[-1]
       result_vectors=result[-2]
       result_times_vector=result[-3]
+  states=result_vectors
   #here we calculate the expectation value of some arbitrary input observable, on the groundstate of out input hamiltonian
   y_vec_list=[[] for _ in range(len(observable_list))]
   for j in range(len(observable_list)):
@@ -320,9 +321,9 @@ def expectation_value_on_gs(filename,observable_list, hamiltonian, states, param
   plt.xscale('log')
   plt.xlabel('1/g^2')
   plt.title('Expectation value of operators on groundstate of H')
-  plt.legend([item for item in filename])
+  plt.legend([str(item) for item in observable_list])
   beep()
-  plt.savefig(str(filename))
+  plt.savefig(savefig_name)
   plt.show()
   return
 
@@ -377,24 +378,25 @@ def plot_energy_gap(filename,hamiltonian,parameter,a,mu):  #if there is no diago
   plt.plot(parameter,gaps,'r--')
   plt.title('Gap between first and ground level')
   plt.xscale('log')
+  plt.xlabel('1/g^2')
   plt.savefig('Energy gap')
   plt.show()
   return
 
 
-def regime_comparison(filenameH, filename_el, filename_B,parameter,a,mu):
+def regime_comparison(filenameH, filename_el, filename_B,savefig_name, parameter,a,mu):
   #before running this function there must be a file with the diagonalisation results of H_el and H_b (uncomment the two lines above:)
   exists_diagonalisation=input('Is there a file with H_total diagonalisation in this regime?')
   if exists_diagonalisation == 'False':
-    exact_diagonalization_and_save(filenameH,filenameH,H_plaquette,1/parameter**2,a,mu)
+    exact_diagonalization_and_save(filenameH,filenameH,H_plaquette,parameter,a,mu)
 
   exists_el_diagonalisation=input('Is there a file with H_el diagonalisation in this regime?')
   if exists_el_diagonalisation == 'False':
-    exact_diagonalization_and_save(filename_el,filename_el,H_el,1/parameter**2,a,mu)
+    exact_diagonalization_and_save(filename_el,filename_el,H_el,parameter,a,mu)
 
   exists_mag_diagonalisation=input('Is there a file with H_b diagonalisation?')
   if exists_mag_diagonalisation == 'False':
-    exact_diagonalization_and_save(filename_B,filename_el,H_b,1/parameter**2,a,mu)
+    exact_diagonalization_and_save(filename_B,filename_B,H_b,parameter,a,mu)
   
   #then we recover the three diagonalisations 
   #that of the full hamiltonian
@@ -412,14 +414,19 @@ def regime_comparison(filenameH, filename_el, filename_B,parameter,a,mu):
     magnetic_energies=magnetic[-1]
     magnetic_vectors=magnetic[-2]
 
-  plt.plot(parameter,result_energies,'r--', label='total H')
-  plt.plot(parameter,electric_energies,'b--', label='total H_el')
-  plt.plot(parameter,magnetic_energies,'g--', label='H_b')
+  electric_overlaps=[]
+  magnetic_overlaps=[]
+  for i in range(len(parameter)):
+    electric_overlaps+=[np.abs(qutip.Qobj.overlap(result_vectors[i],electric_vectors[i]))]
+    magnetic_overlaps+=[np.abs(qutip.Qobj.overlap(result_vectors[i],magnetic_vectors[i]))]
+
+  plt.plot(parameter,electric_overlaps,'r--', label='overlap with H_el groundstates')
+  plt.plot(parameter,magnetic_overlaps,'b--', label='overlap with H_b ground states')
   plt.xscale('log')
   plt.xlabel('1/g^2')
-  plt.legend(['total H', 'H_el', 'H_b'])
+  plt.legend(['overlap with H_el groundstates', 'overlap with H_B groundstates'])
   plt.title('Regime comparison')
-  plt.savefig('regime comparison')
+  plt.savefig(savefig_name)
   plt.show()
 
   return 

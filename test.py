@@ -16,7 +16,7 @@ labels={'alpha_1':1,'alpha_2':2,'beta_1':3,'beta_2':4,'gamma_1':5,'gamma_2':6,'d
 inverse_labels = {value: key for key, value in labels.items()}  #this will be useful for the definition of H_el and delta_H
 
 #parameters
-a=1  #a=1 by default, a=0.0001 for the continuum limit
+a=0.0001  #a=1 by default, a=0.0001 for the continuum limit
 mu=1
 N=1
 g_vec=np.arange(0.1,10,0.1) #free parameter
@@ -31,10 +31,10 @@ g_vec=np.arange(0.1,10,0.1) #free parameter
 
 #exact_diagonalization_and_save('diag H_b','diag H_b',H_b,1/g_vec**2,a,mu)
 
-#expectation_value_on_gs(['gauss law (0,0)','gauss law (1,0)','gauss law (0,1)','gauss law (1,1)'],[gauss_law_operator], H_plaquette, result_vectors, 1/g_vec**2)
-#expectation_value_on_gs(['-H_b','plaquette'],[minus_H_b,plaquette_operator], H_plaquette, result_vectors, 1/g_vec**2,a,mu)
+#expectation_value_on_gs('diagonalisation_continuum.pkl', 'gauss law cont',[gauss_law_operator], H_plaquette, 1/g_vec**2)
+#expectation_value_on_gs('diagonalisation_continuum.pkl','-H_b, plaquette continuum',[minus_H_b,plaquette_operator], H_plaquette, 1/g_vec**2, a,mu)
 
-plot_energy_gap('full diag',H_plaquette,1/g_vec**2,a,mu)
+#plot_energy_gap('full diag',H_plaquette,1/g_vec**2,a,mu)
 
 
-#regime_comparison(filename, f'diag_el a={int(a)}', f'diag_b a={int(a)}',g_vec,a,mu)
+regime_comparison('diagonalisation_continuum.pkl', f'diag H_el a={int(a)}', 'diag H_b','regime_comparison_cont', 1/g_vec**2,a,mu)
