@@ -376,6 +376,7 @@ def plot_energy_gap(filename,hamiltonian,parameter,a,mu):  #if there is no diago
 
   plt.plot(parameter,gaps,'r--')
   plt.title('Gap between first and ground level')
+  plt.xscale('log')
   plt.savefig('Energy gap')
   plt.show()
   return
