@@ -17,31 +17,24 @@ inverse_labels = {value: key for key, value in labels.items()}  #this will be us
 
 #parameters
 a=1  #a=1 by default, a=0.0001 for the continuum limit
-if a==1:
-     filename='diagonalisation.pkl'
-if a==0.0001:
-     filename= 'diagonalisation_continuum.pkl'
 mu=1
 N=1
 g_vec=np.arange(0.1,10,0.1) #free parameter
- 
 
-#check if the stored files have the parameters that we want:
 
-with open(filename, 'rb') as file:
-     result = pickle.load(file)
-     print(result[0])
-     print(result[1])
-     print(result[-1])
+
+
 
 #RUN ALL THE FOLLOWING 5 FUNCTIONS (BOTH FOR a=1 and for a=0)
 
 #exact_diagonalization_and_save(filename,f'diagonalisation a={int(a)}',H_plaquette,1/g_vec**2,a,mu)
 
+#exact_diagonalization_and_save('diag H_b','diag H_b',H_b,1/g_vec**2,a,mu)
+
 #expectation_value_on_gs(['gauss law (0,0)','gauss law (1,0)','gauss law (0,1)','gauss law (1,1)'],[gauss_law_operator], H_plaquette, result_vectors, 1/g_vec**2)
 #expectation_value_on_gs(['-H_b','plaquette'],[minus_H_b,plaquette_operator], H_plaquette, result_vectors, 1/g_vec**2,a,mu)
 
-#plot_energy_gap(H_plaquette,1/g_vec**2,a,mu)
+plot_energy_gap('full diag',H_plaquette,1/g_vec**2,a,mu)
 
 
-regime_comparison(filename, f'diag_el a={int(a)}', f'diag_b a={int(a)}',g_vec,a,mu)
+#regime_comparison(filename, f'diag_el a={int(a)}', f'diag_b a={int(a)}',g_vec,a,mu)

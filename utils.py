@@ -18,7 +18,7 @@ from qutip import tensor, destroy, create, identity
 from qutip import *
 #from qutip.tensor import tensor
 import os
-#import winsound
+import winsound
 import pickle
 
 
@@ -30,7 +30,7 @@ def beep():
     os.system("afplay /System/Library/Sounds/Ping.aiff")
     freq=800
     dur=500
-    #winsound.Beep(freq,dur)
+    winsound.Beep(freq,dur)
   
 
 
@@ -133,7 +133,7 @@ def deltaH(g_1d,a,mu):
   for m in range(1,5):
     delta_H+= ((mu*a*g_1d)**2/8)*(map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)**2
     delta_H-=(mu**2*a/4)* (map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)
-    delta_H += (mu*a*g_1d)**2 / (2*(2*a*g_1d**2)**2) #this are the corrections, but they depend on g_1d inversely-quadratic
+    #delta_H += (mu*a*g_1d)**2 / (2*(2*a*g_1d**2)**2) #this are the corrections, but they depend on g_1d inversely-quadratic
   return delta_H
 
 def Hfree(a,mu,cutoff):
@@ -219,7 +219,7 @@ def V(g_1d,a,mu): #potential term
 
 #we define a function that diagonalizes exactly any input hamiltonian (can be used for any operator), maybe dependent on some parameter
 #the ground state vector and the vector of ground state energies are returned as output
-def exact_diagonalization_and_save(filename,savefig_name, hamiltonian,parameter,a=None,mu=None):
+def exact_diagonalization_and_save(filename,savefig_name, hamiltonian,parameter,a,mu):
   exists_diag=input('is there a file with diagonalization of H?')
   if exists_diag=='False':
     gs_vectors=[]
@@ -249,6 +249,7 @@ def exact_diagonalization_and_save(filename,savefig_name, hamiltonian,parameter,
       result_vectors=result[-2]
       result_times_vector=result[-3]
 
+  beep()
   plt.plot(parameter,result_energies,'r--', label=f'Energy of groundstate of H when a={a}')
   #plt.plot(parameter,result_times_vector,'b--', label='Time to diagonalize H')
   plt.xscale('log')
@@ -266,7 +267,7 @@ def full_diagonalization_and_save(filename,hamiltonian,parameter,a,mu):
   gaps=[]
   for i in range(len(parameter)):
     H= hamiltonian(parameter[i],a,mu)
-    energy_gs,energy_exc = qutip.Qobj.eigenenergies(H)[0:2], 
+    energy_gs,energy_exc = qutip.Qobj.eigenenergies(H)[0], qutip.Qobj.eigenenergies(H)[1]
     groundstates+=[energy_gs]
     first_excited+=[energy_exc]
     gaps+=[energy_exc-energy_gs]
@@ -274,6 +275,7 @@ def full_diagonalization_and_save(filename,hamiltonian,parameter,a,mu):
   data=['parameters',['g_vec',parameter,'a:',a,'mu:',mu],groundstates,first_excited,gaps]
   with open(filename, 'wb') as file:
       pickle.dump(data, file)
+  beep()
   plt.plot(parameter,gaps,'r--')
   plt.title(f'Gap between first and ground level, a={a}')
   plt.show()
@@ -363,13 +365,13 @@ def gauss_law_operator(g):
 
 def plot_energy_gap(filename,hamiltonian,parameter,a,mu):  #if there is no diagonalization then filename=the name how we want to save it
   exists_diag= input('Is there a FULL diagonalization of H in this regime?')
-  if exists_diag== True:
+  if exists_diag== 'True':
     with open(filename, 'rb') as file:
       result = pickle.load(file)
       groundstates=result[-3]
       first_excited=result[-2]
       gaps=result[-1]
-  if exists_diag== False:
+  if exists_diag== 'False':
     full_diagonalization_and_save(filename,hamiltonian,parameter,a,mu)
 
   plt.plot(parameter,gaps,'r--')
