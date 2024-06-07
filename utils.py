@@ -14,7 +14,7 @@ from matplotlib.ticker import LinearLocator
 from pprint import pprint
 from scipy.linalg import block_diag
 import qutip
-from qutip import tensor, destroy, create, identity
+from qutip import tensor, destroy, create, identity, entropy_mutual
 from qutip import *
 #from qutip.tensor import tensor
 import os
@@ -219,7 +219,7 @@ def V(g_1d,a,mu): #potential term
 
 #we define a function that diagonalizes exactly any input hamiltonian (can be used for any operator), maybe dependent on some parameter
 #the ground state vector and the vector of ground state energies are returned as output
-def exact_diagonalization_and_save(filename,savefig_name, hamiltonian,parameter,a,mu):
+def exact_diagonalization_and_save(filename,savefig_name,hamiltonian,parameter,a,mu):
   exists_diag=input('is there a file with diagonalization of H?')
   if exists_diag=='False':
     gs_vectors=[]
@@ -384,7 +384,7 @@ def plot_energy_gap(filename,hamiltonian,parameter,a,mu):  #if there is no diago
   return
 
 
-def regime_comparison(filenameH, filename_el, filename_B,savefig_name, parameter,a,mu):
+def regime_comparison(filenameH, filename_el, filename_B,filename_kin, savefig_name, parameter,a,mu):
   #before running this function there must be a file with the diagonalisation results of H_el and H_b (uncomment the two lines above:)
   exists_diagonalisation=input('Is there a file with H_total diagonalisation in this regime?')
   if exists_diagonalisation == 'False':
@@ -397,6 +397,10 @@ def regime_comparison(filenameH, filename_el, filename_B,savefig_name, parameter
   exists_mag_diagonalisation=input('Is there a file with H_b diagonalisation?')
   if exists_mag_diagonalisation == 'False':
     exact_diagonalization_and_save(filename_B,filename_B,H_b,parameter,a,mu)
+
+  exists_kin_diagonalisation=input('Is there a file with H_kin diagonalisation?')
+  if exists_kin_diagonalisation == 'False':
+    exact_diagonalization_and_save(filename_kin,filename_kin,H_kin,parameter,a,mu)
   
   #then we recover the three diagonalisations 
   #that of the full hamiltonian
@@ -414,19 +418,85 @@ def regime_comparison(filenameH, filename_el, filename_B,savefig_name, parameter
     magnetic_energies=magnetic[-1]
     magnetic_vectors=magnetic[-2]
 
+  with open(filename_kin, 'rb') as file_kin:
+    kinetic = pickle.load(file_kin)
+    kinetic_energies=kinetic[-1]
+    kinetic_vectors=kinetic[-2]
+
   electric_overlaps=[]
   magnetic_overlaps=[]
+  kinetic_overlaps=[]
   for i in range(len(parameter)):
     electric_overlaps+=[np.abs(qutip.Qobj.overlap(result_vectors[i],electric_vectors[i]))]
     magnetic_overlaps+=[np.abs(qutip.Qobj.overlap(result_vectors[i],magnetic_vectors[i]))]
-
+    kinetic_overlaps+=[np.abs(qutip.Qobj.overlap(result_vectors[i],kinetic_vectors[i]))]
   plt.plot(parameter,electric_overlaps,'r--', label='overlap with H_el groundstates')
   plt.plot(parameter,magnetic_overlaps,'b--', label='overlap with H_b ground states')
+  plt.plot(parameter,kinetic_overlaps,'g--', label='overlap with H_kin ground states')
   plt.xscale('log')
   plt.xlabel('1/g^2')
-  plt.legend(['overlap with H_el groundstates', 'overlap with H_B groundstates'])
+  plt.legend(['overlap with H_el groundstates', 'overlap with H_B groundstates', 'overlap with H_kin groundstates'])
   plt.title('Regime comparison')
   plt.savefig(savefig_name)
   plt.show()
 
   return 
+
+def bipartite_ent_entropy_plot(filename, savefig_name, parameter,*args):
+  exists_diag=input('is there a file with diagonalization of H?')
+  if exists_diag=='False':
+    result= exact_diagonalization_and_save(filename,filename,H_plaquette,parameter, *args)
+    result_energies=result[-1]
+    result_vectors=result[-2]
+    result_times_vector=result[-3]
+  elif exists_diag=='True':
+    with open(filename, 'rb') as file:
+      result = pickle.load(file)
+      result_energies=result[-1]
+      result_vectors=result[-2]
+      result_times_vector=result[-3]
+  states=result_vectors
+  entropies=[]
+  for i in range(len(parameter)):
+    rho=states[i] * states[i].dag()
+    entropy=entropy_mutual(rho, [0,1,2,3], [4,5,6,7], base=2, sparse=False)
+    entropies+=[entropy]
+    print(parameter[i],entropy)
+  plt.plot(parameter,entropies,'r--')
+  plt.title('Bipartite entanglement entropy of groundstate')
+  plt.xscale('log')
+  plt.xlabel('1/g^2')
+  plt.savefig(savefig_name)
+  plt.show()
+  return
+
+def density_plot_plaquette(filename_list,parameter):
+  #funcion taylored to plot the expectation value of the plaquette operator for the whole linspace of g and (e.g) 3 values of mu 
+  #first we need to have the diagonalisation of H_plaquette for a=1 and mu=10, 100
+  exists_diag=[input('is there a file with diagonalization of H for mu=1?'),input('and for mu=10?') , input('and for mu=100?')]
+  result=[[],[],[]]
+  result_energies=[[],[],[]]
+  result_times_vector=[[],[],[]]
+  result_vectors=[[],[],[]]
+  for i in range(3):
+    if exists_diag[i]=='False':
+      result[i]= exact_diagonalization_and_save(filename_list[i],f'diagonalisation a={10**i}',H_plaquette,parameter,1,10**i )
+      result_energies[i]=result[i][-1]
+      result_vectors[i]=result[i][-2]
+      result_times_vector[i]=result[i][-3]
+    elif exists_diag=='True':
+      with open(filename_list[i], 'rb') as file:
+        result[i] = pickle.load(file)
+        result_energies[i]=result[i][-1]
+        result_vectors[i]=result[i][-2]
+        result_times_vector[i]=result[i][-3]
+  
+  x=parameter
+  y=[1,10,100] #values for mu
+  bins=[len(parameter),3]
+  weights=[[qutip.expect(plaquette_operator,state) for state in result_vectors[i]] for i in range(len(y))]
+
+  plt.hist2d(x, y, bins, weights, density=False)
+  plt.xscale('log')
+  plt.savefig('density plot plaquette operator')
+  plt.show()
