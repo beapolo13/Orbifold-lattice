@@ -20,6 +20,8 @@ from qutip import *
 import os
 #import winsound
 import pickle
+import matplotlib.colors as mcolors
+
 
 
 
@@ -321,7 +323,7 @@ def expectation_value_on_gs(filename,savefig_name,observable_list, hamiltonian, 
   plt.xscale('log')
   plt.xlabel('1/g^2')
   plt.title('Expectation value of operators on groundstate of H')
-  plt.legend([str(item) for item in observable_list])
+  plt.legend([item for item in observable_list])
   beep()
   plt.savefig(savefig_name)
   plt.show()
@@ -384,7 +386,7 @@ def plot_energy_gap(filename,hamiltonian,parameter,a,mu):  #if there is no diago
   return
 
 
-def regime_comparison(filenameH, filename_el, filename_B,filename_kin, savefig_name, parameter,a,mu):
+def regime_comparison(filenameH, filename_el, filename_B,filename_kin, filename_delta, savefig_name, parameter,a,mu):
   #before running this function there must be a file with the diagonalisation results of H_el and H_b (uncomment the two lines above:)
   exists_diagonalisation=input('Is there a file with H_total diagonalisation in this regime?')
   if exists_diagonalisation == 'False':
@@ -401,8 +403,12 @@ def regime_comparison(filenameH, filename_el, filename_B,filename_kin, savefig_n
   exists_kin_diagonalisation=input('Is there a file with H_kin diagonalisation?')
   if exists_kin_diagonalisation == 'False':
     exact_diagonalization_and_save(filename_kin,filename_kin,H_kin,parameter,a,mu)
+
+  exists_delta_diagonalisation=input('Is there a file with H_delta diagonalisation?')
+  if exists_delta_diagonalisation == 'False':
+    exact_diagonalization_and_save(filename_delta,filename_delta,deltaH,parameter,a,mu)
   
-  #then we recover the three diagonalisations 
+  #then we recover the five diagonalisations 
   #that of the full hamiltonian
   with open(filenameH, 'rb') as file:
     result = pickle.load(file)
@@ -423,19 +429,27 @@ def regime_comparison(filenameH, filename_el, filename_B,filename_kin, savefig_n
     kinetic_energies=kinetic[-1]
     kinetic_vectors=kinetic[-2]
 
+  with open(filename_delta, 'rb') as file_delta:
+    delta = pickle.load(file_delta)
+    delta_energies=delta[-1]
+    delta_vectors=delta[-2]
+
   electric_overlaps=[]
   magnetic_overlaps=[]
   kinetic_overlaps=[]
+  delta_overlaps=[]
   for i in range(len(parameter)):
     electric_overlaps+=[np.abs(qutip.Qobj.overlap(result_vectors[i],electric_vectors[i]))]
     magnetic_overlaps+=[np.abs(qutip.Qobj.overlap(result_vectors[i],magnetic_vectors[i]))]
     kinetic_overlaps+=[np.abs(qutip.Qobj.overlap(result_vectors[i],kinetic_vectors[i]))]
+    delta_overlaps+=[np.abs(qutip.Qobj.overlap(result_vectors[i],delta_vectors[i]))]
+  plt.plot(parameter,delta_overlaps,color='orange', linestyle='dashed', label='overlap with deltaH ground states')
   plt.plot(parameter,electric_overlaps,'r--', label='overlap with H_el groundstates')
   plt.plot(parameter,magnetic_overlaps,'b--', label='overlap with H_b ground states')
   plt.plot(parameter,kinetic_overlaps,'g--', label='overlap with H_kin ground states')
   plt.xscale('log')
   plt.xlabel('1/g^2')
-  plt.legend(['overlap with H_el groundstates', 'overlap with H_B groundstates', 'overlap with H_kin groundstates'])
+  plt.legend(['overlap with deltaH g.s','overlap with H_el groundstates', 'overlap with H_B groundstates', 'overlap with H_kin groundstates'],loc='center left')
   plt.title('Regime comparison')
   plt.savefig(savefig_name)
   plt.show()
@@ -470,33 +484,37 @@ def bipartite_ent_entropy_plot(filename, savefig_name, parameter,*args):
   plt.show()
   return
 
-def density_plot_plaquette(filename_list,parameter):
+def density_plot_plaquette(filename_list,parameter,*args):
   #funcion taylored to plot the expectation value of the plaquette operator for the whole linspace of g and (e.g) 3 values of mu 
   #first we need to have the diagonalisation of H_plaquette for a=1 and mu=10, 100
   exists_diag=[input('is there a file with diagonalization of H for mu=1?'),input('and for mu=10?') , input('and for mu=100?')]
-  result=[[],[],[]]
-  result_energies=[[],[],[]]
-  result_times_vector=[[],[],[]]
+  result=[]
+  result_energies=[]
+  result_times_vector=[]
   result_vectors=[[],[],[]]
   for i in range(3):
     if exists_diag[i]=='False':
-      result[i]= exact_diagonalization_and_save(filename_list[i],f'diagonalisation a={10**i}',H_plaquette,parameter,1,10**i )
-      result_energies[i]=result[i][-1]
-      result_vectors[i]=result[i][-2]
-      result_times_vector[i]=result[i][-3]
-    elif exists_diag=='True':
+      result= exact_diagonalization_and_save(filename_list[i],f'diagonalisation a={10**i}',H_plaquette,parameter,1,10**i )
+      result_energies+=result[-1]
+      result_vectors[i]+=result[-2]
+      result_times_vector+=result[-3]
+    elif exists_diag[i]=='True':
       with open(filename_list[i], 'rb') as file:
-        result[i] = pickle.load(file)
-        result_energies[i]=result[i][-1]
-        result_vectors[i]=result[i][-2]
-        result_times_vector[i]=result[i][-3]
-  
-  x=parameter
-  y=[1,10,100] #values for mu
-  bins=[len(parameter),3]
-  weights=[[qutip.expect(plaquette_operator,state) for state in result_vectors[i]] for i in range(len(y))]
+        result= pickle.load(file)
+        result_energies+=result[-1]
+        result_vectors[i]+=result[-2]
+        result_times_vector+=result[-3]
 
-  plt.hist2d(x, y, bins, weights, density=False)
+  
+
+  x=parameter
+  weights=[[qutip.expect(plaquette_operator(x[i],*args),result_vectors[j][i]) for i in range(len(x)) ] for j in range(3)]  
+
+  fig = plt.figure()
+  ax = fig.add_subplot(111)
+  ax.imshow(weights, cmap='hot', interpolation='nearest')
+  ax.set_aspect(0.2)
   plt.xscale('log')
   plt.savefig('density plot plaquette operator')
+
   plt.show()

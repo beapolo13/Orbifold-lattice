@@ -31,10 +31,10 @@ g_vec=np.arange(0.1,10,0.1) #free parameter
 
 #exact_diagonalization_and_save('diag H_kin','diag H_kin',H_kin,1/g_vec**2,a,mu)
 #run these four functions:
-exact_diagonalization_and_save('diag deltaH','diag deltaH',deltaH,1/g_vec**2,a,mu)
+#exact_diagonalization_and_save('diag deltaH','diag deltaH',deltaH,1/g_vec**2,a,mu)
 #exact_diagonalization_and_save('diagonalisation mu=10.plk','diagonalisation mu=10',H_plaquette,1/g_vec**2,1,10)
 #exact_diagonalization_and_save('diagonalisation mu=100.plk','diagonalisation mu=100',H_plaquette,1/g_vec**2,1,100)
-#density_plot_plaquette(['diagonalisation.plk', 'diagonalisation mu=10.plk', 'diagonalisation mu=100.plk'],1/g_vec**2)
+density_plot_plaquette(['diagonalisation.pkl', 'diagonalisation mu=10.plk', 'diagonalisation mu=100.plk'],1/g_vec**2,a)
 
 
 #y me falta todavía una funcion (que será eterna) para ver el scaling con el cutoff 
@@ -44,6 +44,7 @@ exact_diagonalization_and_save('diag deltaH','diag deltaH',deltaH,1/g_vec**2,a,m
 
 #plot_energy_gap('full diag',H_plaquette,1/g_vec**2,a,mu)
 
+#expectation_value_on_gs('diagonalisation.pkl','contribution of H terms',[H_el,H_b,H_kin,deltaH], H_plaquette, 1/g_vec**2, a,mu)
 
 #regime_comparison('diagonalisation.pkl', f'diag H_el a={int(a)}', 'diag H_b','diag H_kin','diag deltaH','regime_comparison', 1/g_vec**2,a,mu)
 
