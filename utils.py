@@ -494,7 +494,7 @@ def density_plot_plaquette(filename_list,parameter,*args):
   result_vectors=[[],[],[]]
   for i in range(3):
     if exists_diag[i]=='False':
-      result= exact_diagonalization_and_save(filename_list[i],f'diagonalisation a={10**i}',H_plaquette,parameter,1,10**i )
+      result= exact_diagonalization_and_save(filename_list[i],f'diagonalisation mu={10**i}',H_plaquette,parameter,1,10**i )
       result_energies+=result[-1]
       result_vectors[i]+=result[-2]
       result_times_vector+=result[-3]
@@ -506,15 +506,24 @@ def density_plot_plaquette(filename_list,parameter,*args):
         result_times_vector+=result[-3]
 
   
+  weights0= [qutip.expect(plaquette_operator(parameter[np.argmin(np.abs(parameter-item))],*args),result_vectors[0][np.argmin(np.abs(parameter-item))]) for item in parameter]
+  
+  weights=[[qutip.expect(plaquette_operator(parameter[np.argmin(np.abs(parameter-item))],*args),result_vectors[j][np.argmin(np.abs(parameter-item))]) for item in parameter]  for j in range(3)] 
+  bin_edges = np.logspace(np.log10(parameter.min()), np.log10(parameter.max()), num=99)
 
-  x=parameter
-  weights=[[qutip.expect(plaquette_operator(x[i],*args),result_vectors[j][i]) for i in range(len(x)) ] for j in range(3)]  
+  fig, ax = plt.subplots(figsize=(15,15))
+  cax= ax.imshow(weights, cmap='hot', interpolation='nearest',aspect='auto',extent=[bin_edges[0], bin_edges[-1], 3, 0])
+  
+  log_ticks = np.logspace(np.log10(min(parameter)), np.log10(max(parameter)), num=5)
+  ax.set_xticks(log_ticks)
 
-  fig = plt.figure()
-  ax = fig.add_subplot(111)
-  ax.imshow(weights, cmap='hot', interpolation='nearest')
-  ax.set_aspect(0.2)
-  plt.xscale('log')
+  ax.set_yticks(np.arange(3))
+  #ax.set_xticklabels(np.round(parameter))
+  ax.set_yticklabels(['1','10','100'])
+  fig.colorbar(cax)
+  ax.set_xlabel('1/g^2')
+  ax.set_xscale('log')
+  ax.set_ylabel('mu')
   plt.savefig('density plot plaquette operator')
-
+  plt.title('Density plot of groundstate energy wrt mu,g')
   plt.show()
