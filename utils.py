@@ -484,46 +484,51 @@ def bipartite_ent_entropy_plot(filename, savefig_name, parameter,*args):
   plt.show()
   return
 
-def density_plot_plaquette(filename_list,parameter,*args):
-  #funcion taylored to plot the expectation value of the plaquette operator for the whole linspace of g and (e.g) 3 values of mu 
-  #first we need to have the diagonalisation of H_plaquette for a=1 and mu=10, 100
-  exists_diag=[input('is there a file with diagonalization of H for mu=1?'),input('and for mu=10?') , input('and for mu=100?')]
+
+def density_plot_plaquette(filename_list,parameter): 
   result=[]
   result_energies=[]
   result_times_vector=[]
   result_vectors=[[],[],[]]
   for i in range(3):
-    if exists_diag[i]=='False':
-      result= exact_diagonalization_and_save(filename_list[i],f'diagonalisation mu={10**i}',H_plaquette,parameter,1,10**i )
-      result_energies+=result[-1]
-      result_vectors[i]+=result[-2]
-      result_times_vector+=result[-3]
-    elif exists_diag[i]=='True':
       with open(filename_list[i], 'rb') as file:
         result= pickle.load(file)
         result_energies+=result[-1]
         result_vectors[i]+=result[-2]
         result_times_vector+=result[-3]
 
-  
-  weights0= [qutip.expect(plaquette_operator(parameter[np.argmin(np.abs(parameter-item))],*args),result_vectors[0][np.argmin(np.abs(parameter-item))]) for item in parameter]
-  
-  weights=[[qutip.expect(plaquette_operator(parameter[np.argmin(np.abs(parameter-item))],*args),result_vectors[j][np.argmin(np.abs(parameter-item))]) for item in parameter]  for j in range(3)] 
-  bin_edges = np.logspace(np.log10(parameter.min()), np.log10(parameter.max()), num=99)
 
-  fig, ax = plt.subplots(figsize=(15,15))
-  cax= ax.imshow(weights, cmap='hot', interpolation='nearest',aspect='auto',extent=[bin_edges[0], bin_edges[-1], 3, 0])
+  X=parameter
+  Y=np.array([1,10,100])
   
-  log_ticks = np.logspace(np.log10(min(parameter)), np.log10(max(parameter)), num=5)
-  ax.set_xticks(log_ticks)
+  
+  X_grid, Y_grid =np.meshgrid(X,Y)
+  
+  grid= np.vstack([X_grid.ravel(),Y_grid.ravel()]).T 
 
-  ax.set_yticks(np.arange(3))
-  #ax.set_xticklabels(np.round(parameter))
-  ax.set_yticklabels(['1','10','100'])
-  fig.colorbar(cax)
-  ax.set_xlabel('1/g^2')
-  ax.set_xscale('log')
-  ax.set_ylabel('mu')
-  plt.savefig('density plot plaquette operator')
-  plt.title('Density plot of groundstate energy wrt mu,g')
+  W= [[qutip.expect(plaquette_operator(X[j],1,1),result_vectors[i][j])for j in range(len(X))]for i in range(len(Y))]
+
+  plt.plot(X,W[0])
+  plt.plot(X,W[1])
+  plt.plot(X,W[2])
+  plt.xscale('log')
   plt.show()
+  fig,ax=plt.subplots(figsize=(10,6))
+  # for i in range(len(Y)):
+  #   for j in range(len(X)):
+  #     ax.text(X_grid[i,j],Y_grid[i,j], f'{X_grid[i,j]:.1},{Y_grid[i,j]}', ha='center', va='center', fontsize=8, color='blue')
+  c=ax.pcolormesh(X_grid,Y_grid,W,shading='auto',cmap='viridis')
+  fig.colorbar(c,ax=ax)
+  ax.set_xlim(X.min(), X.max())
+  print(X.max(),X.min())
+  ax.set_ylim(Y.min() , Y.max())
+  ax.set_xscale('log')
+  ax.set_yscale('log')
+  ax.grid(True, which='both', linestyle='--')
+  ax.set_xlabel('1/g^2')
+  ax.set_ylabel('mu')
+  plt.title('Density plot of groundstate energy wrt mu,g')
+  plt.savefig('density plot plaquette operator')
+  plt.show()
+
+

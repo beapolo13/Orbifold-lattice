@@ -34,7 +34,8 @@ g_vec=np.arange(0.1,10,0.1) #free parameter
 #exact_diagonalization_and_save('diag deltaH','diag deltaH',deltaH,1/g_vec**2,a,mu)
 #exact_diagonalization_and_save('diagonalisation mu=10.plk','diagonalisation mu=10',H_plaquette,1/g_vec**2,1,10)
 #exact_diagonalization_and_save('diagonalisation mu=100.plk','diagonalisation mu=100',H_plaquette,1/g_vec**2,1,100)
-density_plot_plaquette(['diagonalisation.pkl', 'diagonalisation mu=10.plk', 'diagonalisation mu=100.plk'],1/g_vec**2,a)
+
+density_plot_plaquette(['diagonalisation.pkl', 'diagonalisation mu=10.plk', 'diagonalisation mu=100.plk'],1/g_vec**2)
 
 
 #y me falta todavía una funcion (que será eterna) para ver el scaling con el cutoff 
