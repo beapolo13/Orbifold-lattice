@@ -532,3 +532,29 @@ def density_plot_plaquette(filename_list,parameter):
   plt.show()
 
 
+def exact_diagonalization_and_save_2(filename,hamiltonian,parameter,a,mu):
+  groundstates=[]
+  first_excited=[]
+  gaps=[]
+  state_vectors=[]
+  for i in range(len(parameter)):
+    H= hamiltonian(parameter[i],a,mu)
+    energies, states = qutip.Qobj.eigenstates(H,sparse=False, sort='low', eigvals=2, tol=0, maxiter=100000)
+    groundstates+=[energies[0]]
+    first_excited+=[energies[1]]
+    gaps+=[energies[1]-energies[0]]
+    state_vectors+=[states]
+    print('g value', parameter[i], 'gap=',energies[1]-energies[0])
+  data=['parameters',['g_vec',parameter,'a:',a,'mu:',mu],groundstates,first_excited,gaps,state_vectors]
+  with open(filename, 'wb') as file:
+      pickle.dump(data, file)
+  beep()
+  plt.plot(parameter,gaps,'r--')
+  plt.title(f'Gap between first and ground level, a={a}')
+  plt.xscale('log')
+  plt.yscale('log')
+  plt.savefig('Mass gap')
+  plt.show()
+  return data
+
+
