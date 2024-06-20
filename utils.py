@@ -296,7 +296,7 @@ def plaquette_operator(g,a,N=1): #parameters=[a,N] where N is the number of plaq
         x_delta_dag=(1/np.sqrt(2))*(map('x','delta_1')- 1j*map('x','delta_2'))
         x_gamma_dag=(1/np.sqrt(2))*(map('x','gamma_1')- 1j*map('x','gamma_2'))
         return x_gamma_dag*x_delta_dag*x_beta*x_alpha
-    return (1/(2*N)) *(P_operator()+P_dag_operator())
+    return (1/(2)) *(P_operator()+P_dag_operator())
 
 def expectation_value_on_gs(filename,savefig_name,observable_list, hamiltonian, parameter, *args): 
   exists_diag=input('is there a file with diagonalization of H?')
@@ -558,3 +558,37 @@ def exact_diagonalization_and_save_2(filename,hamiltonian,parameter,a,mu):
   return data
 
 
+def test_function(parameter): 
+  result=[]
+  result_energies=[]
+  result_times_vector=[]
+  result_vectors=[]
+
+  result2=[]
+  result_energies2=[]
+  result_times_vector2=[]
+  result_vectors2=[]
+
+  with open('diagonalisation mu=10.plk', 'rb') as file:
+    result= pickle.load(file)
+    result_energies+=result[-1]
+    result_vectors+=result[-2]
+    result_times_vector+=result[-3]
+
+  with open('diagonalisation mu=100.plk', 'rb') as file:
+    result2= pickle.load(file)
+    result_energies2+=result2[-1]
+    result_vectors2+=result2[-2]
+    result_times_vector2+=result2[-3]
+
+
+  X=parameter
+  Y1= [qutip.expect(plaquette_operator(X[j],1,1),result_vectors[j])for j in range(len(X))]
+  Y2= [qutip.expect(plaquette_operator(X[j],1,1),result_vectors2[j])for j in range(len(X))]
+
+  plt.plot(X,Y1)
+  plt.plot(X,Y2)
+  
+  plt.xscale('log')
+  plt.show()
+  

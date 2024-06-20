@@ -17,7 +17,7 @@ inverse_labels = {value: key for key, value in labels.items()}  #this will be us
 
 #parameters
 a=1  #a=1 by default, a=0.0001 for the continuum limit
-mu=1
+mu=10
 N=1
 g_vec=np.arange(0.1,10,0.1) #free parameter
 
@@ -40,7 +40,7 @@ g_vec=np.arange(0.1,10,0.1) #free parameter
 #y me falta todavía una funcion (que será eterna) para ver el scaling con el cutoff 
 
 #expectation_value_on_gs('diagonalisation_continuum.pkl', 'gauss law cont',[gauss_law_operator], H_plaquette, 1/g_vec**2)
-#expectation_value_on_gs('diagonalisation_continuum.pkl','-H_b, plaquette continuum',[minus_H_b,plaquette_operator], H_plaquette, 1/g_vec**2, a,mu)
+expectation_value_on_gs('diagonalisation mu=10.plk','-H_b, plaquette mu=10',[minus_H_b,plaquette_operator], H_plaquette, 1/g_vec**2, a,10)
 
 #plot_energy_gap('full diag',H_plaquette,1/g_vec**2,a,mu)
 
@@ -50,3 +50,4 @@ g_vec=np.arange(0.1,10,0.1) #free parameter
 
 #bipartite_ent_entropy_plot('diagonalisation.pkl', 'Entanglement entropy', 1/g_vec**2,a, mu)
 
+#test_function(1/g_vec**2)
