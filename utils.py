@@ -18,21 +18,34 @@ from qutip import tensor, destroy, create, identity, entropy_mutual
 from qutip import *
 #from qutip.tensor import tensor
 import os
-#import winsound
+import winsound
 import pickle
 import matplotlib.colors as mcolors
 
-
+#Parameters for plots
+params = {'axes.linewidth': 1.4,
+         'axes.labelsize': 20,
+         'axes.titlesize': 25,
+         'axes.linewidth': 1.5,
+         'lines.markeredgecolor': "black",
+     	'lines.linewidth': 1.5,
+         'xtick.labelsize': 18,
+         'ytick.labelsize': 18,
+         "text.usetex": True,
+         "font.family": "serif",
+         "font.serif": ["Palatino"]
+         }
+plt.rcParams.update(params)
 
 
 n_modes=8
 cutoff=3
 
 def beep():
-    os.system("afplay /System/Library/Sounds/Ping.aiff")
+    #os.system("afplay /System/Library/Sounds/Ping.aiff")
     freq=800
     dur=500
-    #winsound.Beep(freq,dur)
+    winsound.Beep(freq,dur)
   
 
 
@@ -255,9 +268,10 @@ def exact_diagonalization_and_save(filename,savefig_name,hamiltonian,parameter,a
   plt.plot(parameter,result_energies,'r--', label=f'Energy of groundstate of H when a={a}')
   #plt.plot(parameter,result_times_vector,'b--', label='Time to diagonalize H')
   plt.xscale('log')
-  plt.xlabel('1/g^2')
+  plt.xlabel(r'$1/g^2$')
+  plt.ylabel('Groundstate energy')
   plt.legend(['Energy of g.s', 'Time to diagonalize'])
-  plt.title(f'Hamiltonian diagonalization when a={a}')
+  #plt.title(f'Hamiltonian diagonalization when a={a}')
   plt.savefig(savefig_name)
   plt.show()
     # A possible sanity check is to see that H with corrections is positive semidefinite (its lowest eigenvalue is greater than 0)
@@ -298,7 +312,7 @@ def plaquette_operator(g,a,N=1): #parameters=[a,N] where N is the number of plaq
         return x_gamma_dag*x_delta_dag*x_beta*x_alpha
     return (1/(2)) *(P_operator()+P_dag_operator())
 
-def expectation_value_on_gs(filename,savefig_name,observable_list, hamiltonian, parameter, *args): 
+def expectation_value_on_gs(filename,savefig_name,observable_list,legend_string, hamiltonian, parameter, *args): 
   exists_diag=input('is there a file with diagonalization of H?')
   if exists_diag=='False':
     result= exact_diagonalization_and_save(filename,filename,hamiltonian, parameter, *args)
@@ -321,9 +335,10 @@ def expectation_value_on_gs(filename,savefig_name,observable_list, hamiltonian, 
       y_vec_list[j]+=[qutip.expect(operator[i],states[i])]
     plt.plot(parameter, y_vec_list[j],linestyle='dashed')
   plt.xscale('log')
-  plt.xlabel('1/g^2')
-  plt.title('Expectation value of operators on groundstate of H')
-  plt.legend([item for item in observable_list])
+  plt.xlabel(r'$1/g^2$')
+  plt.ylabel('Energy')
+  #plt.title('Expectation value of operators on groundstate of H')
+  plt.legend(legend_string,fontsize=16)
   beep()
   plt.savefig(savefig_name)
   plt.show()
@@ -378,9 +393,11 @@ def plot_energy_gap(filename,hamiltonian,parameter,a,mu):  #if there is no diago
     full_diagonalization_and_save(filename,hamiltonian,parameter,a,mu)
 
   plt.plot(parameter,gaps,'r--')
-  plt.title('Gap between first and ground level')
+  #plt.title('Gap between first and ground level')
   plt.xscale('log')
-  plt.xlabel('1/g^2')
+  plt.yscale('log')
+  plt.xlabel(r'$1/g^2$')
+  plt.ylabel('Energy gap')
   plt.savefig('Energy gap')
   plt.show()
   return
@@ -443,14 +460,16 @@ def regime_comparison(filenameH, filename_el, filename_B,filename_kin, filename_
     magnetic_overlaps+=[np.abs(qutip.Qobj.overlap(result_vectors[i],magnetic_vectors[i]))]
     kinetic_overlaps+=[np.abs(qutip.Qobj.overlap(result_vectors[i],kinetic_vectors[i]))]
     delta_overlaps+=[np.abs(qutip.Qobj.overlap(result_vectors[i],delta_vectors[i]))]
-  plt.plot(parameter,delta_overlaps,color='orange', linestyle='dashed', label='overlap with deltaH ground states')
+  
   plt.plot(parameter,electric_overlaps,'r--', label='overlap with H_el groundstates')
   plt.plot(parameter,magnetic_overlaps,'b--', label='overlap with H_b ground states')
   plt.plot(parameter,kinetic_overlaps,'g--', label='overlap with H_kin ground states')
+  plt.plot(parameter,delta_overlaps,color='orange', linestyle='dashed', label='overlap with deltaH ground states')
   plt.xscale('log')
-  plt.xlabel('1/g^2')
-  plt.legend(['overlap with deltaH g.s','overlap with H_el groundstates', 'overlap with H_B groundstates', 'overlap with H_kin groundstates'],loc='center left')
-  plt.title('Regime comparison')
+  plt.xlabel(r'$1/g^2$')
+  plt.ylabel('Overlap')
+  plt.legend([r'$H_{e l}$',r'$H_{B}$',r'$H_{k i n}$', r'$\Delta H$'],fontsize=16)
+  #plt.title('Regime comparison')
   plt.savefig(savefig_name)
   plt.show()
 
@@ -477,9 +496,10 @@ def bipartite_ent_entropy_plot(filename, savefig_name, parameter,*args):
     entropies+=[entropy]
     print(parameter[i],entropy)
   plt.plot(parameter,entropies,'r--')
-  plt.title('Bipartite entanglement entropy of groundstate')
+  #plt.title('Bipartite entanglement entropy of groundstate')
   plt.xscale('log')
-  plt.xlabel('1/g^2')
+  plt.xlabel(r'$1/g^2$')
+  plt.ylabel('Entropy')
   plt.savefig(savefig_name)
   plt.show()
   return
