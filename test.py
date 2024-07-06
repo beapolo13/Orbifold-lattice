@@ -26,7 +26,7 @@ g_vec=np.arange(0.1,10,0.1) #free parameter
 
 #RUN ALL THE FOLLOWING 5 FUNCTIONS (BOTH FOR a=1 and for a=0)
 
-#exact_diagonalization_and_save('diagonalisation.pkl',f'diagonalisation a={int(a)}',H_plaquette,1/g_vec**2,a,mu)
+#exact_diagonalization_and_save('diagonalisation.pkl',f'diagonalisation a={int(a)}.pdf',H_plaquette,1/g_vec**2,a,mu)
 
 #exact_diagonalization_and_save('diag H_kin','diag H_kin',H_kin,1/g_vec**2,a,mu)
 #run these four functions:
@@ -39,14 +39,14 @@ g_vec=np.arange(0.1,10,0.1) #free parameter
 #y me falta todavía una funcion (que será eterna) para ver el scaling con el cutoff 
 
 #expectation_value_on_gs('diagonalisation_continuum.pkl', 'gauss law cont',[gauss_law_operator], H_plaquette, 1/g_vec**2)
-expectation_value_on_gs('diagonalisation.pkl','-H_b, plaquette',[minus_H_b,plaquette_operator], [r'$-H_{B}$', r'Plaquette operator'],H_plaquette, 1/g_vec**2, a,1)
+#expectation_value_on_gs('diagonalisation.pkl','-H_b, plaquette.pdf',[minus_H_b,plaquette_operator], [r'$-H_{B}$', r'Plaquette operator'],H_plaquette, 1/g_vec**2, a,1)
 
 #plot_energy_gap('full diag',H_plaquette,1/g_vec**2,a,mu)
 
-#expectation_value_on_gs('diagonalisation.pkl','contribution of H terms',[H_el,H_b,H_kin,deltaH], [r'$H_{e l}$',r'$H_{B}$',r'$H_{k i n}$', r'$\Delta H$'],H_plaquette, 1/g_vec**2, a,mu)
+#expectation_value_on_gs('diagonalisation.pkl','contribution of H terms.pdf',[H_el,H_b,H_kin,deltaH], [r'$H_{e l}$',r'$H_{B}$',r'$H_{k i n}$', r'$\Delta H$'],H_plaquette, 1/g_vec**2, a,mu)
 
-#regime_comparison('diagonalisation.pkl', f'diag H_el a={int(a)}', 'diag H_b','diag H_kin','diag deltaH','regime_comparison', 1/g_vec**2,a,mu)
+regime_comparison('diagonalisation.pkl', f'diag H_el a={int(a)}', 'diag H_b','diag H_kin','diag deltaH','regime_comparison.pdf', 1/g_vec**2,a,mu)
 
-#bipartite_ent_entropy_plot('diagonalisation.pkl', 'Entanglement entropy', 1/g_vec**2,a, mu)
+#bipartite_ent_entropy_plot('diagonalisation.pkl', 'Entanglement entropy.pdf', 1/g_vec**2,a, mu)
 
 #test_function(1/g_vec**2)

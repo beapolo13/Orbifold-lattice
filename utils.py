@@ -18,7 +18,7 @@ from qutip import tensor, destroy, create, identity, entropy_mutual
 from qutip import *
 #from qutip.tensor import tensor
 import os
-import winsound
+#import winsound
 import pickle
 import matplotlib.colors as mcolors
 
@@ -45,7 +45,7 @@ def beep():
     #os.system("afplay /System/Library/Sounds/Ping.aiff")
     freq=800
     dur=500
-    winsound.Beep(freq,dur)
+    #winsound.Beep(freq,dur)
   
 
 
@@ -270,7 +270,7 @@ def exact_diagonalization_and_save(filename,savefig_name,hamiltonian,parameter,a
   plt.xscale('log')
   plt.xlabel(r'$1/g^2$')
   plt.ylabel('Groundstate energy')
-  plt.legend(['Energy of g.s', 'Time to diagonalize'])
+  plt.legend(['Energy of g.s', 'Time to diagonalize'], fontsize=12)
   #plt.title(f'Hamiltonian diagonalization when a={a}')
   plt.savefig(savefig_name)
   plt.show()
@@ -398,7 +398,7 @@ def plot_energy_gap(filename,hamiltonian,parameter,a,mu):  #if there is no diago
   plt.yscale('log')
   plt.xlabel(r'$1/g^2$')
   plt.ylabel('Energy gap')
-  plt.savefig('Energy gap')
+  plt.savefig('Energy gap.pdf')
   plt.show()
   return
 
