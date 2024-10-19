@@ -6,6 +6,7 @@ from scipy.sparse import lil_matrix, csc_matrix
 import matplotlib.pyplot as plt
 from itertools import combinations
 from scipy.optimize import minimize
+import sympy as sp
 import time
 import sys
 import matplotlib.pyplot as plt
@@ -67,7 +68,7 @@ def map(type,label):
   if type=='x':
     return (1/np.sqrt(2))*(ladder(True,labels[label],cutoff) + ladder(False,labels[label],cutoff))
   elif type=='p':
-    return (1j/np.sqrt(2))*(ladder(False,labels[label],cutoff) - ladder(True,labels[label],cutoff))
+    return (1j/(np.sqrt(2)))*(ladder(True,labels[label],cutoff) - ladder(False,labels[label],cutoff))
   
 #construct hamiltonian
 
@@ -80,28 +81,25 @@ def H_plaquette(g_1d,a,mu):
   #print('H_kin', H_kin)
 
   H_b=0
-  H_b+= (map('x','beta_1')*map('x','alpha_1')-map('x','beta_2')*map('x','alpha_2')+map('x','gamma_1')*map('x','delta_1')-map('x','gamma_2')*map('x','delta_2'))**2     #first term
-  H_b+= (map('x','beta_1')*map('x','alpha_2')+map('x','beta_2')*map('x','alpha_1')+map('x','gamma_1')*map('x','delta_2')+map('x','gamma_2')*map('x','delta_1'))**2    #second term
+  H_b+= (map('x','beta_1')*map('x','alpha_1')-map('x','beta_2')*map('x','alpha_2')-map('x','gamma_1')*map('x','delta_1')+map('x','gamma_2')*map('x','delta_2'))**2     #first term
+  H_b+= (map('x','beta_1')*map('x','alpha_2')+map('x','beta_2')*map('x','alpha_1')-map('x','gamma_1')*map('x','delta_2')-map('x','gamma_2')*map('x','delta_1'))**2    #second term
   H_b*=(g_1d**2)
   #print('H_b',H_b)
 
   H_el=0
-  for m in range(1,5):
-    H_el+= (map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)**2  #first term
-  H_el+=(map('x',inverse_labels[1])**2 + map('x',inverse_labels[2])**2)*(map('x',inverse_labels[7])**2 + map('x',inverse_labels[8])**2)
-  H_el-=(map('x',inverse_labels[1])**2 + map('x',inverse_labels[2])**2)*(map('x',inverse_labels[3])**2 + map('x',inverse_labels[4])**2)
-  H_el-=(map('x',inverse_labels[5])**2 + map('x',inverse_labels[6])**2)*(map('x',inverse_labels[7])**2 + map('x',inverse_labels[8])**2)
-  H_el+=(map('x',inverse_labels[5])**2 + map('x',inverse_labels[6])**2)*(map('x',inverse_labels[3])**2 + map('x',inverse_labels[4])**2)
-  H_el*=g_1d**2/(4*a)
+  H_el+=(map('x',inverse_labels[1])**2 + map('x',inverse_labels[2])**2 + map('x',inverse_labels[7])**2 + map('x',inverse_labels[8])**2)**2
+  H_el+=(-map('x',inverse_labels[1])**2 - map('x',inverse_labels[2])**2 + map('x',inverse_labels[3])**2 + map('x',inverse_labels[4])**2)**2
+  H_el+=(map('x',inverse_labels[5])**2 + map('x',inverse_labels[6])**2 - map('x',inverse_labels[7])**2 - map('x',inverse_labels[8])**2)**2
+  H_el+=(-map('x',inverse_labels[5])**2 - map('x',inverse_labels[6])**2 - map('x',inverse_labels[3])**2 - map('x',inverse_labels[4])**2)**2
+  H_el*=g_1d**2/(8*a)
   #print('H_el',H_el)
 
   delta_H=0
-  #C=(mu*a*g_1d)**2/8
-  #D= 2/(a*(g_1d**2))
+  C=(mu*a*g_1d)**2/2
+  D= 1/(2*a*(g_1d**2))
   for m in range(1,5):
-    delta_H+= ((mu*a*g_1d)**2/8)*(map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)**2
-    delta_H-=(mu**2*a/4)* (map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2)
-    #delta_H += (mu*a*g_1d)**2 / (2*(2*a*g_1d**2)**2) #this are the corrections, but they depend on g_1d inversely-quadratic
+    delta_H+= (0.5*(map('x',inverse_labels[2*m-1])**2 + map('x',inverse_labels[2*m])**2) - D)**2
+  delta_H *= C
   #print('delta H', delta_H)
 
   return H_kin + H_b + H_el + delta_H
@@ -358,7 +356,7 @@ def commutator(operator1,operator2,parameter,parameter1=None,parameter2=None):
     return answer
 
 
-def gauss_law_operator(g):
+def gauss_law_operator():
     x_alpha_dag=(1/np.sqrt(2))*(map('x','alpha_1')- 1j*map('x','alpha_2'))
     x_beta_dag=(1/np.sqrt(2))*(map('x','beta_1')- 1j*map('x','beta_2'))
     x_delta=(1/np.sqrt(2))*(map('x','delta_1')+ 1j*map('x','delta_2'))
@@ -377,9 +375,18 @@ def gauss_law_operator(g):
     p_delta_dag=(1/np.sqrt(2))*(map('p','delta_1')- 1j*map('p','delta_2'))
     p_gamma_dag=(1/np.sqrt(2))*(map('p','gamma_1')- 1j*map('p','gamma_2'))
 
+    print(p_alpha.norm())
+    print('TEST',qutip.commutator(x_delta,p_delta_dag))
     #returns a list of operators of g for each site, numbered 00, 10,01,11 
-    return [-x_alpha*p_alpha_dag + p_alpha*x_alpha_dag -x_delta*p_delta_dag +p_delta*x_delta_dag, -x_alpha_dag*p_alpha + p_alpha_dag*x_alpha -x_beta*p_beta_dag +p_beta*x_beta_dag, -x_gamma*p_gamma_dag + p_gamma*x_gamma_dag -x_delta_dag*p_delta +p_delta_dag*x_delta, -x_gamma_dag*p_gamma + p_gamma_dag*x_gamma -x_beta_dag*p_beta +p_beta_dag*x_beta]
-    
+    return [1j*(-x_alpha*p_alpha_dag + p_alpha*x_alpha_dag -x_delta*p_delta_dag +p_delta*x_delta_dag), 1j*(-x_alpha_dag*p_alpha + p_alpha_dag*x_alpha -x_beta*p_beta_dag +p_beta*x_beta_dag), 1j*(-x_gamma*p_gamma_dag + p_gamma*x_gamma_dag -x_delta_dag*p_delta +p_delta_dag*x_delta), 1j*(-x_gamma_dag*p_gamma + p_gamma_dag*x_gamma -x_beta_dag*p_beta +p_beta_dag*x_beta)]
+
+
+g_1d,a,mu = 1,1,1
+h=H_plaquette(g_1d,a,mu)
+print(type(g_1d))
+g00= gauss_law_operator()[0]
+result = qutip.commutator(h,g00)
+print(result)
 
 def plot_energy_gap(filename,hamiltonian,parameter,a,mu):  #if there is no diagonalization then filename=the name how we want to save it
   exists_diag= input('Is there a FULL diagonalization of H in this regime?')

@@ -135,12 +135,16 @@ def G_kd():
 def G_ku():
     return 6 - 2* (ru * p_ru_i - ru_i * p_ru + lu * p_lu_i - lu_i * p_lu + u * p_u_i - u_i * p_u)
 
-h= H_k(g_1d,a,mu)
+h= H_k(1,1,1)
 g = G_kd()
 g2= G_ku()
 
-print('first',commutator(h,g))
+print(h)
+print('')
+print('')
 
-print('second',commutator(h,g2))
+print('first real',sp.simplify(sp.expand(commutator(h,g))))
+
+print('second real', sp.simplify(sp.expand(commutator(h,g2))))
 
 print(commutator(h,g) == commutator(h,g2))
