@@ -83,8 +83,8 @@ def add_commutator_relation(A, B, result):
 
 
 #Define all of our variables
-a, a_i, b, b_i, c, c_i, d, d_i = sp.symbols('a, a_i, b, b_i, c, c_i, d, d_i', commutative=False)
-p_a, p_a_i, p_b, p_b_i, p_c, p_c_i, p_d, p_d_i  = sp.symbols('p_a, p_a_i, p_b, p_b_i, p_c, p_c_i, p_d, p_d_i', commutative=False)
+a, a_i, b, b_i, c, c_i, d, d_i, e, e_i, f, f_i = sp.symbols('a, a_i, b, b_i, c, c_i, d, d_i,e, e_i, f, f_i', commutative=False)
+p_a, p_a_i, p_b, p_b_i, p_c, p_c_i, p_d,p_d_i, p_e,p_e_i, p_f, p_f_i  = sp.symbols('p_a, p_a_i, p_b, p_b_i, p_c, p_c_i, p_d, p_d_i,p_e,p_e_i, p_f, p_f_i', commutative=False)
 g_1d,mu = sp.symbols('g_1d,mu', commutative= True)
 
 
@@ -97,9 +97,13 @@ add_commutator_relation(c,p_c,1j)
 add_commutator_relation(c_i,p_c_i,1j)
 add_commutator_relation(d,p_d,1j)
 add_commutator_relation(d_i,p_d_i,1j)
+add_commutator_relation(e,p_e,1j)
+add_commutator_relation(e_i,p_e_i,1j)
+add_commutator_relation(f,p_f,1j)
+add_commutator_relation(f_i,p_f_i,1j)
 
 
-def H_1(g_1d,mu):  #hamiltonian of the k-th site of the chain
+def H_1(g_1d,mu):  #hamiltonian of the 1st site of the chain
   H_kin=(1/2)*(p_a**2+p_a_i**2+p_b**2+p_b_i**2+p_c**2+p_c_i**2+p_d**2+p_d_i**2)
   #print('H_kin', H_kin)
 
@@ -109,13 +113,6 @@ def H_1(g_1d,mu):  #hamiltonian of the k-th site of the chain
   H_b*=(g_1d**2)
   #print('H_b',H_b)
 
-  H_el=0
-  H_el += (a**2 + a_i**2 + d**2 + d_i**2)**2  #lower left site
-  H_el += (-a**2 - a_i**2 + b**2 + b_i**2)**2  #lower right site
-  H_el += (- c**2 - c_i**2 - b**2 - b_i**2)**2  #upper left site
-  H_el += (c**2 + c_i**2 - d**2 - d_i**2)**2  #upper right site
-  H_el*=g_1d**2/8
-  #print('H_el',H_el)
 
   delta_H=0
   C=(mu*g_1d)**2/2
@@ -127,7 +124,7 @@ def H_1(g_1d,mu):  #hamiltonian of the k-th site of the chain
   delta_H *= C
   #print('delta H', delta_H)
 
-  return H_kin + H_b + H_el + delta_H
+  return H_kin + H_b  + delta_H
 
 def H_k(g_1d,mu):  #hamiltonian of the k-th plaquette of the chain, with k different than 1
   H_kin=(1/2)*(p_a**2+p_a_i**2+p_b**2+p_b_i**2+p_c**2+p_c_i**2)
@@ -139,14 +136,7 @@ def H_k(g_1d,mu):  #hamiltonian of the k-th plaquette of the chain, with k diffe
   H_b*=(g_1d**2)
   #print('H_b',H_b)
 
-  H_el=0
-  H_el += (a**2+ a_i**2 + d**2 + d_i**2)**2  #lower left site
-  H_el += (-a**2 - a_i**2 + b**2 + b_i**2)**2  #lower right site
-  H_el += (-c**2 - c_i**2 - b**2 - b_i**2)**2  #upper left site
-  H_el += (c**2 + c_i**2 - d**2 - d_i**2)**2  #upper right site
-  H_el*=g_1d**2/(8)
-  #no está terminada, porque habría que quitar el término correspondiente a los sites de la derecha de la plaqueta anterior y sumar los de la nueva
-  #print('H_el',H_el)
+  
 
   delta_H=0
   C=(mu*g_1d)**2/2
@@ -157,41 +147,78 @@ def H_k(g_1d,mu):  #hamiltonian of the k-th plaquette of the chain, with k diffe
   delta_H *= C
   #print('delta H', delta_H)
 
-  return H_kin + H_b + H_el + delta_H
+  return H_kin + H_b + delta_H
 
-#gauss law for 1 plaquette only
-def G_00():
-    return (1j/2)* (-(a+1j*a_i)*(p_a-1j*p_a_i) + (p_a+1j*p_a_i)*(a-1j*a_i) - (d+1j*d_i)*(p_d-1j*p_d_i) + (p_d+1j*p_d_i)*(d-1j*d_i))
+def H_el_lower(g_1d):
+    return (g_1d**2/8) * (a**2 + a_i**2 -f**2 - f_i**2 + d**2 + d_i**2)**2
 
+def H_el_upper(g_1d):
+    return (g_1d**2/8) * (c**2 + c_i**2 - e**2 - e_i**2 - d**2 - d_i**2)**2
 
-def G_10():
+#gauss law
+#operators to the left side of the site
+def G_l_down():
     return (1j/2)* (-(b+1j*b_i)*(p_b-1j*p_b_i) + (p_b+1j*p_b_i)*(b-1j*b_i) - (a-1j*a_i)*(p_a+1j*p_a_i) + (p_a-1j*p_a_i)*(a+1j*a_i))
-
-def G_01():
-    return (1j/2)* (-(c+1j*c_i)*(p_c-1j*p_c_i) + (p_c+1j*p_c_i)*(c-1j*c_i) - (d-1j*d_i)*(p_d+1j*p_d_i) + (p_d-1j*p_d_i)*(d+1j*d_i))
-
-def G_11():
+def G_l_up():
     return (1j/2) * (-(c-1j*c_i)*(p_c+1j*p_c_i) + (p_c-1j*p_c_i)*(c+1j*c_i) - (b-1j*b_i)*(p_b+1j*p_b_i) + (p_b-1j*p_b_i)*(b+1j*b_i))
 
-h= H_1(g_1d,mu)
-g00 = G_00()
-g10= G_10()
-g01= G_01()
-g11= G_11()
-print(h)
+#operators to the right side of the site
+def G_r_down():
+    return (1j/2)* (-(a+1j*a_i)*(p_a-1j*p_a_i) + (p_a+1j*p_a_i)*(a-1j*a_i) )
+def G_r_up():
+    return (1j/2)* (-(c+1j*c_i)*(p_c-1j*p_c_i) + (p_c+1j*p_c_i)*(c-1j*c_i))
+
+
+
+h1= H_1(g_1d,mu)
+h2 =H_k(g_1d,mu)
+h_el_low=H_el_lower(g_1d)
+h_el_up=H_el_upper(g_1d)
 print('')
 print('')
 
-lower_left_site_comm = str(commutator(h,g00)).replace('I','1j')
-print('lower left site',lower_left_site_comm)
+lower_h1_comm_gl = str(commutator(h1,G_l_down())).replace('I','1j')
+print('lower left site',lower_h1_comm_gl)
 print('')
-lower_right_site_comm = str(commutator(h,g10)).replace('I','1j')
-print('lower right site',lower_right_site_comm)
+lower_h2_comm_gr = str(commutator(h2,G_r_down())).replace('I','1j')
+print('lower right site',lower_h2_comm_gr)
 print('')
-upper_left_site_comm = str(commutator(h,g01)).replace('I','1j')
-print('upper left site',upper_left_site_comm)
-print('')
-upper_right_site_comm = str(commutator(h,g11)).replace('I','1j')
-print('upper right site',upper_right_site_comm)
+lower_el = str(commutator(h_el_low,G_l_down()+G_r_down())).replace('I','1j')
+print('lower site el',lower_el)
 print('')
 
+lower_h1_comm_gl = str(commutator(h1,G_l_down())).replace('I','1j')
+print('lower left site',lower_h1_comm_gl)
+print('')
+lower_h2_comm_gr = str(commutator(h2,G_r_down())).replace('I','1j')
+print('lower right site',lower_h2_comm_gr)
+print('')
+lower_el = str(commutator(h_el_low,G_l_down()+G_r_down())).replace('I','1j')
+print('lower site el',lower_el)
+print('')
+
+# upper_left_site_comm = str(commutator(h,g01)).replace('I','1j')
+# print('upper left site',upper_left_site_comm)
+# print('')
+# upper_right_site_comm = str(commutator(h,g11)).replace('I','1j')
+# print('upper right site',upper_right_site_comm)
+# print('')
+
+
+
+
+# H_el=0
+#   H_el += (a**2 + a_i**2 + d**2 + d_i**2)**2  #lower left site
+#   H_el += (-a**2 - a_i**2 + b**2 + b_i**2)**2  #lower right site
+#   H_el += (- c**2 - c_i**2 - b**2 - b_i**2)**2  #upper left site
+#   H_el += (c**2 + c_i**2 - d**2 - d_i**2)**2  #upper right site
+#   H_el*=g_1d**2/8
+#   #print('H_el',H_el)
+# H_el=0
+#   H_el += (a**2+ a_i**2 + d**2 + d_i**2)**2  #lower left site
+#   H_el += (-a**2 - a_i**2 + b**2 + b_i**2)**2  #lower right site
+#   H_el += (-c**2 - c_i**2 - b**2 - b_i**2)**2  #upper left site
+#   H_el += (c**2 + c_i**2 - d**2 - d_i**2)**2  #upper right site
+#   H_el*=g_1d**2/(8)
+#   #no está terminada, porque habría que quitar el término correspondiente a los sites de la derecha de la plaqueta anterior y sumar los de la nueva
+#   #print('H_el',H_el)
