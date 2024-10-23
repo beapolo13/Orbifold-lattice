@@ -157,16 +157,16 @@ def H_el_upper(g_1d):
 
 #gauss law
 #operators to the left side of the site
-def G_l_down():
+def G_l_down(): #here n=10
     return (1j/2)* (-(b+1j*b_i)*(p_b-1j*p_b_i) + (p_b+1j*p_b_i)*(b-1j*b_i) - (a-1j*a_i)*(p_a+1j*p_a_i) + (p_a-1j*p_a_i)*(a+1j*a_i))
-def G_l_up():
+def G_l_up(): #here n=11
     return (1j/2) * (-(c-1j*c_i)*(p_c+1j*p_c_i) + (p_c-1j*p_c_i)*(c+1j*c_i) - (b-1j*b_i)*(p_b+1j*p_b_i) + (p_b-1j*p_b_i)*(b+1j*b_i))
 
 #operators to the right side of the site
-def G_r_down():
-    return (1j/2)* (-(a+1j*a_i)*(p_a-1j*p_a_i) + (p_a+1j*p_a_i)*(a-1j*a_i) )
-def G_r_up():
-    return (1j/2)* (-(c+1j*c_i)*(p_c-1j*p_c_i) + (p_c+1j*p_c_i)*(c-1j*c_i))
+def G_r_down(): #here n=00
+    return (1j/2)* (-(a+1j*a_i)*(p_a-1j*p_a_i) + (p_a+1j*p_a_i)*(a-1j*a_i) -(d+1j*d_i)*(p_d-1j*p_d_i) + (p_d+1j*p_d_i)*(d-1j*d_i) )
+def G_r_up(): #here n=01
+    return (1j/2)* (-(c+1j*c_i)*(p_c-1j*p_c_i) + (p_c+1j*p_c_i)*(c-1j*c_i) -(d+1j*d_i)*(p_d-1j*p_d_i) + (p_d+1j*p_d_i)*(d-1j*d_i))
 
 
 
@@ -187,14 +187,14 @@ lower_el = str(commutator(h_el_low,G_l_down()+G_r_down())).replace('I','1j')
 print('lower site el',lower_el)
 print('')
 
-lower_h1_comm_gl = str(commutator(h1,G_l_down())).replace('I','1j')
-print('lower left site',lower_h1_comm_gl)
+upper_h1_comm_gl = str(commutator(h1,G_l_up())).replace('I','1j')
+print('upper left site',upper_h1_comm_gl)
 print('')
-lower_h2_comm_gr = str(commutator(h2,G_r_down())).replace('I','1j')
-print('lower right site',lower_h2_comm_gr)
+upper_h2_comm_gr = str(commutator(h2,G_r_up())).replace('I','1j')
+print('upper right site',upper_h2_comm_gr)
 print('')
-lower_el = str(commutator(h_el_low,G_l_down()+G_r_down())).replace('I','1j')
-print('lower site el',lower_el)
+upper_el = str(commutator(h_el_up,G_l_up()+G_r_up())).replace('I','1j')
+print('upper site el',upper_el)
 print('')
 
 # upper_left_site_comm = str(commutator(h,g01)).replace('I','1j')
@@ -220,5 +220,3 @@ print('')
 #   H_el += (-c**2 - c_i**2 - b**2 - b_i**2)**2  #upper left site
 #   H_el += (c**2 + c_i**2 - d**2 - d_i**2)**2  #upper right site
 #   H_el*=g_1d**2/(8)
-#   #no está terminada, porque habría que quitar el término correspondiente a los sites de la derecha de la plaqueta anterior y sumar los de la nueva
-#   #print('H_el',H_el)
