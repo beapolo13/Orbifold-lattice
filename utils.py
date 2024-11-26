@@ -3,6 +3,8 @@ import numpy as np
 from numpy import transpose, real, sqrt, sin, cos, linalg, cosh, sinh
 import scipy
 from scipy.sparse import lil_matrix, csc_matrix
+from scipy.sparse import csr_matrix
+from scipy.sparse.linalg import eigsh
 import matplotlib.pyplot as plt
 from itertools import combinations
 from scipy.optimize import minimize
@@ -275,7 +277,7 @@ def exact_diagonalization_and_save(filename,savefig_name,hamiltonian,parameter,a
     # A possible sanity check is to see that H with corrections is positive semidefinite (its lowest eigenvalue is greater than 0)
   return result
 
-def full_diagonalization_and_save(filename,hamiltonian,parameter,a,mu):
+def full_diagonalization_and_save(filename,hamiltonian,parameter,a,mu): #full diag only of ground and first excited state
   groundstates=[]
   first_excited=[]
   gaps=[]
@@ -292,6 +294,39 @@ def full_diagonalization_and_save(filename,hamiltonian,parameter,a,mu):
   beep()
   plt.plot(parameter,gaps,'r--')
   plt.title(f'Gap between first and ground level, a={a}')
+  plt.show()
+  return data
+
+def full_full_diagonalization_and_save(filename,hamiltonian,parameter,a,mu):
+  H = hamiltonian(parameter,a,mu)
+  my_op=H.full()
+  print(type(my_op))
+  sparse_op=my_op.data
+  #we are going to try to do it by sparsing the matrix to accelerate computations:
+  # Get the sparse data of the Qobj
+  if isinstance(sparse_op, csr_matrix): # Verify it's sparse
+    print("The matrix is already sparse.")
+  else: # Convert dense to sparse (unlikely necessary in QuTiP)
+    sparse_op = csr_matrix(sparse_op)
+    print("Converted to sparse matrix.")
+  energies,raw_states = eigsh(sparse_op, k=200)  # Adjust k as needed
+  states = [Qobj(vec, dims=[H.dims[0], [1]]) for vec in raw_states.T]
+  #energies,states = qutip.Qobj.eigenstates(H)
+  data=['parameters',['g_vec',parameter,'a:',a,'mu:',mu],energies,states]
+  print(states)
+  entropy =[]
+  for i in range(len(states)):
+    rho = states[i] * states[i].dag()
+    entropy+=[entropy_mutual(rho, [0,1,2,3], [4,5,6,7], base=2, sparse=True) ]
+    print(i)
+  with open(filename, 'wb') as file:
+      pickle.dump(data, file)
+  beep()
+  plt.scatter(energies,entropy)
+  plt.xlabel('Eigenstate energy')
+  plt.ylabel('Bipartite entanglement entropy')
+  plt.title(f'Energy vs entanglement entropy')
+  plt.savefig('Entropy-energy.pdf')
   plt.show()
   return data
 
@@ -380,13 +415,6 @@ def gauss_law_operator():
     #returns a list of operators of g for each site, numbered 00, 10,01,11 
     return [1j*(-x_alpha*p_alpha_dag + p_alpha*x_alpha_dag -x_delta*p_delta_dag +p_delta*x_delta_dag), 1j*(-x_alpha_dag*p_alpha + p_alpha_dag*x_alpha -x_beta*p_beta_dag +p_beta*x_beta_dag), 1j*(-x_gamma*p_gamma_dag + p_gamma*x_gamma_dag -x_delta_dag*p_delta +p_delta_dag*x_delta), 1j*(-x_gamma_dag*p_gamma + p_gamma_dag*x_gamma -x_beta_dag*p_beta +p_beta_dag*x_beta)]
 
-
-g_1d,a,mu = 1,1,1
-h=H_plaquette(g_1d,a,mu)
-print(type(g_1d))
-g00= gauss_law_operator()[0]
-result = qutip.commutator(h,g00)
-print(result)
 
 def plot_energy_gap(filename,hamiltonian,parameter,a,mu):  #if there is no diagonalization then filename=the name how we want to save it
   exists_diag= input('Is there a FULL diagonalization of H in this regime?')

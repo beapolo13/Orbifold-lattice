@@ -45,8 +45,10 @@ g_vec=np.arange(0.1,10,0.1) #free parameter
 
 #expectation_value_on_gs('diagonalisation.pkl','contribution of H terms.pdf',[H_el,H_b,H_kin,deltaH], [r'$H_{e l}$',r'$H_{B}$',r'$H_{k i n}$', r'$\Delta H$'],H_plaquette, 1/g_vec**2, a,mu)
 
-regime_comparison('diagonalisation.pkl', f'diag H_el a={int(a)}', 'diag H_b','diag H_kin','diag deltaH','regime_comparison.pdf', 1/g_vec**2,a,mu)
+#regime_comparison('diagonalisation.pkl', f'diag H_el a={int(a)}', 'diag H_b','diag H_kin','diag deltaH','regime_comparison.pdf', 1/g_vec**2,a,mu)
 
 #bipartite_ent_entropy_plot('diagonalisation.pkl', 'Entanglement entropy.pdf', 1/g_vec**2,a, mu)
 
 #test_function(1/g_vec**2)
+
+full_full_diagonalization_and_save('full_full_diag.pkl', H_plaquette,1,1,1)
