@@ -302,6 +302,8 @@ def full_full_diagonalization_and_save(filename,hamiltonian,parameter,a,mu):
   my_op=H.full()
   print(type(my_op))
   sparse_op=my_op.data
+  hilbert_dim = H.dims[0][0]**len(H.dims[0])
+  print(hilbert_dim)
   #we are going to try to do it by sparsing the matrix to accelerate computations:
   # Get the sparse data of the Qobj
   if isinstance(sparse_op, csr_matrix): # Verify it's sparse
@@ -309,20 +311,46 @@ def full_full_diagonalization_and_save(filename,hamiltonian,parameter,a,mu):
   else: # Convert dense to sparse (unlikely necessary in QuTiP)
     sparse_op = csr_matrix(sparse_op)
     print("Converted to sparse matrix.")
-  energies,raw_states = eigsh(sparse_op, k=200)  # Adjust k as needed
-  states = [Qobj(vec, dims=[H.dims[0], [1]]) for vec in raw_states.T]
+  energies1,raw_states1 = eigsh(sparse_op, k=hilbert_dim/2, which='SM')  
+  print('lowest eigenstates calculated')
+  energies2,raw_states2 = eigsh(sparse_op, k=hilbert_dim/2, which='LM')
+  print('highest eigenstates calculated')
+  raw_states = np.concatenate((raw_states1,raw_states2), axis=1)
+  energies= np.concatenate((energies1,energies2))
+  mutual_info =[]
+  i=0
+  for raw_state in raw_states.T:
+    sparse_data = csr_matrix(raw_state.data)
+    state = Qobj(sparse_data.T, dims =[[3, 3, 3, 3, 3, 3, 3, 3], [1]] ) #create sparse state
+    sparse_dm_data = sparse_data @ sparse_data.getH()  # Sparse outer product
+
+# Create the Qobj for the density matrix with the appropriate dimensions
+    rho = Qobj(sparse_dm_data, dims=[state.dims[1], state.dims[1]])
+  #states = [Qobj(vec, [H.dims[0],[1]]) for vec in raw_states.T]
   #energies,states = qutip.Qobj.eigenstates(H)
-  data=['parameters',['g_vec',parameter,'a:',a,'mu:',mu],energies,states]
-  print(states)
-  entropy =[]
-  for i in range(len(states)):
-    rho = states[i] * states[i].dag()
-    entropy+=[entropy_mutual(rho, [0,1,2,3], [4,5,6,7], base=2, sparse=True) ]
+  
+  #print(states)
+
+  #for state in states:
+    #rho= ket2dm(state)
+    rhoA= ptrace(state,[0,1,2,3])
+    rhoB=  ptrace(state, [4,5,6,7])
+    #print('p traces ok')
+    entropyA= entropy_vn(rhoA, base=2, sparse=True )
+    entropyB= entropy_vn(rhoB, base=2, sparse=True )
+    #print('entropies ok')
+    entropy_rho= entropy_vn(rho,base=2,sparse=True)
+    #print('total entropy ok')
+    mutual_info+=[entropyA + entropyB -entropy_rho ]
+    i+=1
     print(i)
+  data=['parameters',['g_vec',parameter,'a:',a,'mu:',mu],energies,raw_states]
   with open(filename, 'wb') as file:
       pickle.dump(data, file)
   beep()
-  plt.scatter(energies,entropy)
+  mid_x= energies[0]+(energies[-1]-energies[0])/2
+  plt.axvline(x=mid_x, color='red', linestyle='--')
+  plt.scatter(energies,mutual_info)
   plt.xlabel('Eigenstate energy')
   plt.ylabel('Bipartite entanglement entropy')
   plt.title(f'Energy vs entanglement entropy')
