@@ -51,4 +51,10 @@ g_vec=np.arange(0.1,10,0.1) #free parameter
 
 #test_function(1/g_vec**2)
 
-full_full_diagonalization_and_save('full_full_diag.pkl', H_plaquette,1,1,1)
+#full_full_diagonalization_and_save('full_full_diag.pkl', H_plaquette,1,1,1)
+with open('full_full_diag.pkl', 'rb') as file:
+      result = pickle.load(file)
+      result_energies=result[-2]
+      print(result_energies)
+      print(np.shape(result_energies))
+      print(result_energies[0],result_energies[5000])
