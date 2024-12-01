@@ -309,7 +309,7 @@ def full_full_diagonalization_and_save(filename,hamiltonian,parameter,a,mu):
   if isinstance(sparse_op, csr_matrix): # Verify it's sparse
     print("The matrix is already sparse.")
   else: # Convert dense to sparse (unlikely necessary in QuTiP)
-    sparse_op = csr_matrix(sparse_op)
+    sparse_op =  csr_matrix(sparse_op)
     print("Converted to sparse matrix.")
   energies1,raw_states1 = eigsh(sparse_op, k=hilbert_dim/2, which='SM')  
   print('lowest eigenstates calculated')
