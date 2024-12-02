@@ -348,7 +348,7 @@ def full_full_diagonalization_and_save(filename,hamiltonian,parameter,a,mu):
   with open(filename, 'wb') as file:
       pickle.dump(data, file)
   beep()
-  mid_x= energies[0]+(energies[-1]-energies[0])/2
+  mid_x= energies1[0]+(energies2[0]-energies1[0])/2
   plt.axvline(x=mid_x, color='red', linestyle='--')
   plt.scatter(energies,mutual_info)
   plt.xlabel('Eigenstate energy')
